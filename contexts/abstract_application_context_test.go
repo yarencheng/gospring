@@ -9,7 +9,7 @@ import (
 
 func TestGetBean_getSingleton(t *testing.T) {
 
-	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
 		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf("")),
 	})
 
@@ -22,7 +22,7 @@ func TestGetBean_getSingleton(t *testing.T) {
 
 func TestGetBean_getPrototype(t *testing.T) {
 
-	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
 		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf("")),
 	})
 
@@ -35,7 +35,7 @@ func TestGetBean_getPrototype(t *testing.T) {
 
 func TestGetBean_getSingletonTwice(t *testing.T) {
 
-	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
 		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf("")),
 	})
 
@@ -49,7 +49,7 @@ func TestGetBean_getSingletonTwice(t *testing.T) {
 
 func TestGetBean_getPrototypeTwice(t *testing.T) {
 
-	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
 		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf("")),
 	})
 
@@ -63,7 +63,7 @@ func TestGetBean_getPrototypeTwice(t *testing.T) {
 
 func TestGetBean_noSuchId(t *testing.T) {
 
-	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{})
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{})
 
 	if _, e := ctx.GetBean("bean_1_id"); e == nil {
 		t.Error()

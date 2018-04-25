@@ -14,7 +14,7 @@ type AbstractApplicatoinContext struct {
 	beansById map[string]interface{}
 }
 
-func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) *AbstractApplicatoinContext {
+func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplicatoinContext, error) {
 
 	var ctx AbstractApplicatoinContext
 	ctx.metas = metas
@@ -25,7 +25,7 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) *AbstractApplica
 		ctx.metasById[meta.GetId()] = meta
 	}
 
-	return &ctx
+	return &ctx, nil
 }
 
 func (ctx *AbstractApplicatoinContext) GetBean(id string) (interface{}, error) {
