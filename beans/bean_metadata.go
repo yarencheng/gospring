@@ -3,16 +3,18 @@ package beans
 import "reflect"
 
 type BeanMetaData struct {
-	id     string
-	scope  Scope
-	ztruct reflect.Type
+	id         string
+	scope      Scope
+	ztruct     reflect.Type
+	properties []*PropertyMetaData
 }
 
-func NewBeanMetaData(id string, scope Scope, ztruct reflect.Type) *BeanMetaData {
+func NewBeanMetaData(id string, scope Scope, ztruct reflect.Type, properties []*PropertyMetaData) *BeanMetaData {
 	return &BeanMetaData{
-		id:     id,
-		scope:  scope,
-		ztruct: ztruct,
+		id:         id,
+		scope:      scope,
+		ztruct:     ztruct,
+		properties: properties,
 	}
 }
 
