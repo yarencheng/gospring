@@ -1,6 +1,7 @@
 package contexts
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -29,7 +30,81 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplic
 		ctx.metasById[meta.GetId()] = meta
 	}
 
+	// check all reference inside beans exist
+	for _, meta := range metas {
+		for _, property := range meta.GetProperties() {
+			if _, present := ctx.metasById[property.GetReference()]; !present {
+				e := fmt.Errorf("reference [%s] of property [%s] is dose not exist", property.GetReference(), meta.GetId())
+				return nil, e
+			}
+		}
+	}
+
+	// check dependecy info
+	if e := ctx.checkDependencyLoop(); e != nil {
+		eout := fmt.Errorf("Detect a circle dependency. Cuased by: %v", e)
+		return nil, eout
+	}
+
 	return &ctx, nil
+}
+
+type node struct {
+	id     string
+	childs map[string]*node
+	isWalk bool
+}
+
+func recursive(walked []*node, cur *node) error {
+	if len(cur.childs) == 0 {
+		return nil
+	}
+	for _, ch := range cur.childs {
+		if ch.isWalk {
+			var buffer bytes.Buffer
+			for _, w := range walked {
+				buffer.WriteString("[")
+				buffer.WriteString(w.id)
+				buffer.WriteString("]>")
+			}
+			e := fmt.Errorf("detect a loop %s[%s]", buffer.String(), ch.id)
+			return e
+		}
+	}
+	for _, ch := range cur.childs {
+		if e := recursive(append(walked, ch), ch); e != nil {
+			return e
+		}
+	}
+
+	return nil
+}
+
+func (ctx *AbstractApplicatoinContext) checkDependencyLoop() error {
+
+	nodes := make(map[string]*node)
+
+	for _, meta := range ctx.metas {
+		nodes[meta.GetId()] = &node{
+			id:     meta.GetId(),
+			childs: make(map[string]*node),
+			isWalk: false,
+		}
+	}
+
+	for _, meta := range ctx.metas {
+		for _, property := range meta.GetProperties() {
+			nodes[meta.GetId()].childs[property.GetReference()] = nodes[property.GetReference()]
+		}
+	}
+
+	for _, v := range nodes {
+		if e := recursive(make([]*node, 10), v); e != nil {
+			return e
+		}
+	}
+
+	return nil
 }
 
 func (ctx *AbstractApplicatoinContext) GetBean(id string) (interface{}, error) {
