@@ -1,0 +1,33 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "GWtDi0sYbtCQzF/ZaVhaHvCMvuk=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "c155da19408a8799da419ed3eeb0cb5db0ad5dbc",
+			"revisionTime": "2018-03-11T22:51:37Z",
+			"version": "v1",
+			"versionExact": "v1.0.5"
+		},
+		{
+			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "b0697eccbea9adec5b7ba8008f4c33d98d733388",
+			"revisionTime": "2018-04-23T13:30:03Z"
+		},
+		{
+			"checksumSHA1": "RSCMWnn21rwYF//Yt89AC1f1wXY=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "79b0c6888797020a994db17c8510466c72fe75d9",
+			"revisionTime": "2018-04-18T21:20:05Z"
+		},
+		{
+			"checksumSHA1": "Dfz4tGItokMvHZENCsBmPPB8FGQ=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "79b0c6888797020a994db17c8510466c72fe75d9",
+			"revisionTime": "2018-04-18T21:20:05Z"
+		}
+	],
+	"rootPath": "github.com/yarencheng/gospring"
+}
