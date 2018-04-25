@@ -7,7 +7,7 @@ import (
 	"github.com/yarencheng/gospring/beans"
 )
 
-func TestGetBean(t *testing.T) {
+func TestGetBean_getSingleton(t *testing.T) {
 
 	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
 		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf("")),
@@ -16,11 +16,24 @@ func TestGetBean(t *testing.T) {
 	bean, _ := ctx.GetBean("bean_1_id")
 
 	if _, ok := bean.(*string); !ok {
-		t.Error("Failed to get a string")
+		t.Error()
 	}
 }
 
-func TestGetBean_getTwice(t *testing.T) {
+func TestGetBean_getPrototype(t *testing.T) {
+
+	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf("")),
+	})
+
+	bean, _ := ctx.GetBean("bean_1_id")
+
+	if _, ok := bean.(*string); !ok {
+		t.Error()
+	}
+}
+
+func TestGetBean_getSingletonTwice(t *testing.T) {
 
 	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
 		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf("")),
@@ -30,7 +43,21 @@ func TestGetBean_getTwice(t *testing.T) {
 	bean2, _ := ctx.GetBean("bean_1_id")
 
 	if bean1 != bean2 {
-		t.Error("Failed to get a string")
+		t.Error()
+	}
+}
+
+func TestGetBean_getPrototypeTwice(t *testing.T) {
+
+	ctx := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf("")),
+	})
+
+	bean1, _ := ctx.GetBean("bean_1_id")
+	bean2, _ := ctx.GetBean("bean_1_id")
+
+	if bean1 == bean2 {
+		t.Error()
 	}
 }
 

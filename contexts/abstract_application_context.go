@@ -30,10 +30,6 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) *AbstractApplica
 
 func (ctx *AbstractApplicatoinContext) GetBean(id string) (interface{}, error) {
 
-	if bean := ctx.beansById[id]; bean != nil {
-		return bean, nil
-	}
-
 	meta := ctx.metasById[id]
 
 	if meta == nil {
@@ -41,9 +37,33 @@ func (ctx *AbstractApplicatoinContext) GetBean(id string) (interface{}, error) {
 		return nil, errors.New(e)
 	}
 
+	switch meta.GetScope() {
+	case beans.Singleton:
+		return ctx.getSingletonBean(meta)
+	case beans.Prototype:
+		return ctx.getPrototypeBean(meta)
+	default:
+		e := fmt.Errorf("unknown scope [%v]", meta.GetScope())
+		return nil, e
+	}
+}
+
+func (ctx *AbstractApplicatoinContext) getSingletonBean(meta *beans.BeanMetaData) (interface{}, error) {
+
+	if bean := ctx.beansById[meta.GetId()]; bean != nil {
+		return bean, nil
+	}
+
 	bean := reflect.New(meta.GetStruct()).Interface()
 
-	ctx.beansById[id] = bean
+	ctx.beansById[meta.GetId()] = bean
+
+	return bean, nil
+}
+
+func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData) (interface{}, error) {
+
+	bean := reflect.New(meta.GetStruct()).Interface()
 
 	return bean, nil
 }
