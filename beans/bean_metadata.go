@@ -6,10 +6,10 @@ type BeanMetaData struct {
 	id         string
 	scope      Scope
 	ztruct     reflect.Type
-	properties []*PropertyMetaData
+	properties []PropertyMetaData
 }
 
-func NewBeanMetaData(id string, scope Scope, ztruct reflect.Type, properties []*PropertyMetaData) *BeanMetaData {
+func NewBeanMetaData(id string, scope Scope, ztruct reflect.Type, properties []PropertyMetaData) *BeanMetaData {
 	return &BeanMetaData{
 		id:         id,
 		scope:      scope,
@@ -28,4 +28,10 @@ func (meta *BeanMetaData) GetScope() Scope {
 
 func (meta *BeanMetaData) GetStruct() reflect.Type {
 	return meta.ztruct
+}
+
+func (meta *BeanMetaData) GetProperties() []PropertyMetaData {
+	tmp := make([]PropertyMetaData, len(meta.properties))
+	copy(tmp, meta.properties)
+	return tmp
 }
