@@ -1,17 +1,21 @@
 package beans
 
-import "reflect"
-
 type PropertyMetaData struct {
-	name string
+	name      string
+	reference string
 }
 
-func NewPropertyMetaData(name string, scope Scope, ztruct reflect.Type) *PropertyMetaData {
+func NewPropertyMetaData(name string, reference string) *PropertyMetaData {
 	return &PropertyMetaData{
-		name: name,
+		name:      name,
+		reference: reference,
 	}
 }
 
 func (meta *PropertyMetaData) GetName() string {
 	return meta.name
+}
+
+func (meta *PropertyMetaData) GetReference() string {
+	return meta.reference
 }
