@@ -69,3 +69,15 @@ func TestGetBean_noSuchId(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestNewAbstractApplicatoinContext_idConfilck(t *testing.T) {
+
+	_, e := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf("")),
+		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf("")),
+	})
+
+	if e == nil {
+		t.Error()
+	}
+}

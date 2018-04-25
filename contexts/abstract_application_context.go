@@ -22,6 +22,10 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplic
 	ctx.beansById = make(map[string]interface{})
 
 	for _, meta := range metas {
+		if old, present := ctx.metasById[meta.GetId()]; present {
+			e := fmt.Errorf("id [%s] is already used by the other bean [%v]", meta.GetId(), old)
+			return nil, e
+		}
 		ctx.metasById[meta.GetId()] = meta
 	}
 
