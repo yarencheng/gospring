@@ -2,6 +2,7 @@ package contexts
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/yarencheng/gospring/beans"
@@ -96,7 +97,35 @@ func TestGetBean_getBeanWithProperty_string(t *testing.T) {
 		}),
 	})
 
-	beanP, _ := ctx.GetBean("bean_1_id")
+	beanP, e := ctx.GetBean("bean_1_id")
+	if e != nil {
+		t.Fatal(e)
+	}
+	bean := beanP.(*Bean)
+
+	if expected != bean.Property_1 {
+		t.Errorf("expected=[%v] bean.Property_1=[%v]", expected, bean.Property_1)
+	}
+}
+
+func TestGetBean_getBeanWithProperty_int(t *testing.T) {
+
+	type Bean struct {
+		Property_1 int
+	}
+
+	expected := 123
+
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(Bean{}), []beans.PropertyMetaData{
+			*beans.NewPropertyMetaData("Property_1", "", strconv.Itoa(expected)),
+		}),
+	})
+
+	beanP, e := ctx.GetBean("bean_1_id")
+	if e != nil {
+		t.Fatal(e)
+	}
 	bean := beanP.(*Bean)
 
 	if expected != bean.Property_1 {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/yarencheng/gospring/beans"
 )
@@ -200,6 +201,13 @@ func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData
 		switch field.Type().Kind() {
 		case reflect.String:
 			field.Set(reflect.ValueOf(p.GetValue()))
+		case reflect.Int:
+			i, e := strconv.ParseInt(p.GetValue(), 10, 32)
+			if e != nil {
+				e := fmt.Errorf("[%v] can't convert to int. Caused by: %v", p.GetValue(), e)
+				return reflect.Value{}, e
+			}
+			field.SetInt(i)
 		default:
 			e := fmt.Errorf("Unsopport type %v", field.Type())
 			return reflect.Value{}, e
