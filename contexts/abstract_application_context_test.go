@@ -165,7 +165,7 @@ func TestGetBean_getBeanWithProperty_singletonBean(t *testing.T) {
 	}
 }
 
-func TestGetBean_getBeanWithProperty_prototypeBean(t *testing.T) {
+func TestGetBean_getBeanWithProperty_prototypeBean_copyPointer(t *testing.T) {
 
 	type Bean1 struct {
 		a int
@@ -206,5 +206,38 @@ func TestGetBean_getBeanWithProperty_prototypeBean(t *testing.T) {
 
 	if bean1.Bean1 == bean2.Bean1 {
 		t.Errorf("bean1.Bean1=[%p] bean2.Bean1=[%p]", bean1.Bean1, bean2.Bean1)
+	}
+}
+
+func TestGetBean_getBeanWithProperty_prototypeBean_copyValue(t *testing.T) {
+
+	type Bean1 struct {
+		I int
+	}
+	type Bean2 struct {
+		Bean1 Bean1
+	}
+
+	expected := 123
+
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(Bean1{}), []beans.PropertyMetaData{
+			*beans.NewPropertyMetaData("I", "", strconv.Itoa(expected)),
+		}),
+		beans.NewBeanMetaData("bean_2_id", beans.Prototype, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData{
+			*beans.NewPropertyMetaData("Bean1", "bean_1_id", ""),
+		}),
+	})
+
+	beanP, e := ctx.GetBean("bean_2_id")
+
+	if e != nil {
+		t.Fatal(e)
+	}
+
+	bean := beanP.(*Bean2)
+
+	if bean.Bean1.I != expected {
+		t.Errorf("bean.Bean1.I=[%v] expected=[%v]", bean.Bean1.I, expected)
 	}
 }

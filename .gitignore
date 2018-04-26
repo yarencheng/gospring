@@ -16,3 +16,5 @@
 # govendor
 vendor/*
 !vendor/vendor.json
+
+.vscode

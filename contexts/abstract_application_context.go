@@ -209,7 +209,6 @@ func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData
 					return reflect.Value{}, e
 				}
 
-				reflect.ValueOf(pb)
 				field.Set(pb)
 
 			case reflect.Struct:
@@ -218,6 +217,9 @@ func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData
 						reflect.TypeOf(pb).Elem(), p.GetReference(), field.Type(), p.GetName())
 					return reflect.Value{}, e
 				}
+
+				field.Set(pb.Elem())
+
 			default:
 				e := fmt.Errorf("[%v] dose not support", field.Type())
 				return reflect.Value{}, e
