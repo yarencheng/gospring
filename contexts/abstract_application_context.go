@@ -63,6 +63,17 @@ func (ctx *AbstractApplicatoinContext) checkProperty() error {
 		}
 	}
 
+	// only one can exist in a property between refrence or value
+	for _, meta := range ctx.metas {
+		for _, property := range meta.GetProperties() {
+			if (len(property.GetValue()) == 0) != (len(property.GetReference()) == 0) {
+				continue
+			}
+			e := fmt.Errorf("only one can exist in a property between refrence or value [%v]", property.GetName())
+			return e
+		}
+	}
+
 	// check loop
 
 	nodes := make(map[string]*node)
