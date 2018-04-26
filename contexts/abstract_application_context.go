@@ -212,6 +212,11 @@ func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData
 				field.Set(pb)
 
 			case reflect.Struct:
+
+				if ctx.metasById[p.GetReference()].GetScope() == beans.Singleton {
+					e := fmt.Errorf("Can't inject a singleton into a non-pointer field")
+					return reflect.Value{}, e
+				}
 				if pb.Type().Elem() != field.Type() {
 					e := fmt.Errorf("type [%v] of bean [%v] is diffrent from type [%v] of property [%v]",
 						reflect.TypeOf(pb).Elem(), p.GetReference(), field.Type(), p.GetName())

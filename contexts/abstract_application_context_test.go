@@ -165,6 +165,27 @@ func TestGetBean_getBeanWithProperty_singletonBean(t *testing.T) {
 	}
 }
 
+func TestGetBean_getBeanWithProperty_singletonBean_notPointer(t *testing.T) {
+
+	type Bean1 struct{}
+	type Bean2 struct {
+		Bean1 Bean1 // not pointer
+	}
+
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf(Bean1{}), nil),
+		beans.NewBeanMetaData("bean_2_id", beans.Singleton, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData{
+			*beans.NewPropertyMetaData("Bean1", "bean_1_id", ""),
+		}),
+	})
+
+	_, e := ctx.GetBean("bean_2_id")
+
+	if e == nil {
+		t.Error()
+	}
+}
+
 func TestGetBean_getBeanWithProperty_prototypeBean_copyPointer(t *testing.T) {
 
 	type Bean1 struct {
