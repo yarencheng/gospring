@@ -132,3 +132,35 @@ func TestGetBean_getBeanWithProperty_int(t *testing.T) {
 		t.Errorf("expected=[%v] bean.Property_1=[%v]", expected, bean.Property_1)
 	}
 }
+
+func TestGetBean_getBeanWithProperty_singletonBean(t *testing.T) {
+
+	type Bean1 struct{}
+	type Bean2 struct {
+		Bean1 *Bean1
+	}
+
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf(Bean1{}), nil),
+		beans.NewBeanMetaData("bean_2_id", beans.Singleton, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData{
+			*beans.NewPropertyMetaData("Bean1", "bean_1_id", ""),
+		}),
+	})
+
+	bean1P, e1 := ctx.GetBean("bean_1_id")
+	if e1 != nil {
+		t.Fatal(e1)
+	}
+
+	bean2P, e2 := ctx.GetBean("bean_2_id")
+	if e2 != nil {
+		t.Fatal(e2)
+	}
+
+	bean1 := bean1P.(*Bean1)
+	bean2 := bean2P.(*Bean2)
+
+	if bean1 != bean2.Bean1 {
+		t.Errorf("bean1=[%p] bean2.Bean1=[%p]", bean1, bean2.Bean1)
+	}
+}

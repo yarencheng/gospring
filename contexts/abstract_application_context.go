@@ -136,30 +136,31 @@ func walkAndCheckLoop(walked map[string]*node, cur *node) error {
 }
 
 func (ctx *AbstractApplicatoinContext) GetBean(id string) (interface{}, error) {
+	b, e := ctx.getBean(id)
+	if e != nil {
+		return nil, e
+	} else {
+		return b.Interface(), nil
+	}
+}
+
+func (ctx *AbstractApplicatoinContext) getBean(id string) (reflect.Value, error) {
 
 	meta := ctx.metasById[id]
 
 	if meta == nil {
 		e := fmt.Sprintf("bean with id [%s] is not defined", id)
-		return nil, errors.New(e)
+		return reflect.Value{}, errors.New(e)
 	}
 
 	switch meta.GetScope() {
 	case beans.Singleton:
-		b, e := ctx.getSingletonBean(meta)
-		if e != nil {
-			return nil, e
-		}
-		return b.Interface(), nil
+		return ctx.getSingletonBean(meta)
 	case beans.Prototype:
-		b, e := ctx.getPrototypeBean(meta)
-		if e != nil {
-			return nil, e
-		}
-		return b.Interface(), nil
+		return ctx.getPrototypeBean(meta)
 	default:
 		e := fmt.Errorf("unknown scope [%v]", meta.GetScope())
-		return nil, e
+		return reflect.Value{}, e
 	}
 }
 
@@ -194,7 +195,34 @@ func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData
 		field := bean.Elem().FieldByName(p.GetName())
 
 		if len(p.GetReference()) > 0 {
-			// TODO: inject bean
+			pb, e := ctx.getBean(p.GetReference())
+			if e != nil {
+				e := fmt.Errorf("Failed to get bean [%v]. Caused by: %v", p.GetReference(), e)
+				return reflect.Value{}, e
+			}
+
+			switch field.Type().Kind() {
+			case reflect.Ptr:
+				if pb.Type().Elem() != field.Type().Elem() {
+					e := fmt.Errorf("type [%v] of bean [%v] is diffrent from type [%v] of property [%v]",
+						reflect.TypeOf(pb).Elem(), p.GetReference(), field.Type().Elem(), p.GetName())
+					return reflect.Value{}, e
+				}
+
+				reflect.ValueOf(pb)
+				field.Set(pb)
+
+			case reflect.Struct:
+				if pb.Type().Elem() != field.Type() {
+					e := fmt.Errorf("type [%v] of bean [%v] is diffrent from type [%v] of property [%v]",
+						reflect.TypeOf(pb).Elem(), p.GetReference(), field.Type(), p.GetName())
+					return reflect.Value{}, e
+				}
+			default:
+				e := fmt.Errorf("[%v] dose not support", field.Type())
+				return reflect.Value{}, e
+			}
+
 			continue
 		}
 
