@@ -35,11 +35,6 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplic
 		return nil, e
 	}
 
-	// check dependecy info
-	if e := ctx.checkProperty(); e != nil {
-		return nil, e
-	}
-
 	return &ctx, nil
 }
 
