@@ -81,3 +81,25 @@ func TestNewAbstractApplicatoinContext_idConfilck(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestGetBean_getBeanWithProperty_string(t *testing.T) {
+
+	type Bean struct {
+		Property_1 string
+	}
+
+	expected := "hahahaha"
+
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
+		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(Bean{}), []beans.PropertyMetaData{
+			*beans.NewPropertyMetaData("Property_1", "", expected),
+		}),
+	})
+
+	beanP, _ := ctx.GetBean("bean_1_id")
+	bean := beanP.(*Bean)
+
+	if expected != bean.Property_1 {
+		t.Errorf("expected=[%v] bean.Property_1=[%v]", expected, bean.Property_1)
+	}
+}

@@ -12,7 +12,7 @@ import (
 type AbstractApplicatoinContext struct {
 	metas     []*beans.BeanMetaData
 	metasById map[string]*beans.BeanMetaData
-	beansById map[string]interface{}
+	beansById map[string]reflect.Value
 }
 
 func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplicatoinContext, error) {
@@ -20,7 +20,7 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplic
 	var ctx AbstractApplicatoinContext
 	ctx.metas = metas
 	ctx.metasById = make(map[string]*beans.BeanMetaData)
-	ctx.beansById = make(map[string]interface{})
+	ctx.beansById = make(map[string]reflect.Value)
 
 	// create map with (key,value)=(id,beanmeta)
 	for _, meta := range metas {
@@ -87,12 +87,16 @@ func (ctx *AbstractApplicatoinContext) checkProperty() error {
 
 	for _, meta := range ctx.metas {
 		for _, property := range meta.GetProperties() {
+			if len(property.GetReference()) == 0 {
+				continue
+			}
 			nodes[meta.GetId()].childs[property.GetReference()] = nodes[property.GetReference()]
 		}
 	}
 
 	for _, v := range nodes {
-		if e := walkAndCheckLoop(make(map[string]*node), v); e != nil {
+		m := make(map[string]*node)
+		if e := walkAndCheckLoop(m, v); e != nil {
 			return e
 		}
 	}
@@ -106,27 +110,26 @@ type node struct {
 }
 
 func walkAndCheckLoop(walked map[string]*node, cur *node) error {
-	if len(cur.childs) == 0 {
-		return nil
-	}
-	for k, v := range cur.childs {
-		if _, present := walked[k]; present {
-			var buffer bytes.Buffer
-			for _, w := range walked {
-				buffer.WriteString("[")
-				buffer.WriteString(w.id)
-				buffer.WriteString("]>")
-			}
-			e := fmt.Errorf("detect a loop %s[%s]", buffer.String(), v.id)
-			return e
+	if _, present := walked[cur.id]; present {
+		var buffer bytes.Buffer
+		for _, w := range walked {
+			buffer.WriteString("[")
+			buffer.WriteString(w.id)
+			buffer.WriteString("]>")
 		}
+		e := fmt.Errorf("detect a loop %s[%s]", buffer.String(), cur.id)
+		return e
+	}
 
-		walked[k] = v
+	walked[cur.id] = cur
+
+	for _, v := range cur.childs {
 		if e := walkAndCheckLoop(walked, v); e != nil {
 			return e
 		}
-		delete(walked, k)
 	}
+
+	delete(walked, cur.id)
 
 	return nil
 }
@@ -142,31 +145,66 @@ func (ctx *AbstractApplicatoinContext) GetBean(id string) (interface{}, error) {
 
 	switch meta.GetScope() {
 	case beans.Singleton:
-		return ctx.getSingletonBean(meta)
+		b, e := ctx.getSingletonBean(meta)
+		if e != nil {
+			return nil, e
+		}
+		return b.Interface(), nil
 	case beans.Prototype:
-		return ctx.getPrototypeBean(meta)
+		b, e := ctx.getPrototypeBean(meta)
+		if e != nil {
+			return nil, e
+		}
+		return b.Interface(), nil
 	default:
 		e := fmt.Errorf("unknown scope [%v]", meta.GetScope())
 		return nil, e
 	}
 }
 
-func (ctx *AbstractApplicatoinContext) getSingletonBean(meta *beans.BeanMetaData) (interface{}, error) {
+func (ctx *AbstractApplicatoinContext) getSingletonBean(meta *beans.BeanMetaData) (reflect.Value, error) {
 
-	if bean := ctx.beansById[meta.GetId()]; bean != nil {
+	if bean, present := ctx.beansById[meta.GetId()]; present {
 		return bean, nil
 	}
 
-	bean := reflect.New(meta.GetStruct()).Interface()
+	bean, e := ctx.getPrototypeBean(meta)
+
+	if e != nil {
+		return reflect.Value{}, e
+	}
 
 	ctx.beansById[meta.GetId()] = bean
 
 	return bean, nil
 }
 
-func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData) (interface{}, error) {
+func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData) (reflect.Value, error) {
 
-	bean := reflect.New(meta.GetStruct()).Interface()
+	bean := reflect.New(meta.GetStruct())
+
+	for _, p := range meta.GetProperties() {
+
+		if _, present := meta.GetStruct().FieldByName(p.GetName()); !present {
+			e := fmt.Errorf("There is no field named [%v] in bean [%v]", p.GetName(), meta.GetId())
+			return reflect.Value{}, e
+		}
+
+		field := bean.Elem().FieldByName(p.GetName())
+
+		if len(p.GetReference()) > 0 {
+			// TODO: inject bean
+			continue
+		}
+
+		switch field.Type().Kind() {
+		case reflect.String:
+			field.Set(reflect.ValueOf(p.GetValue()))
+		default:
+			e := fmt.Errorf("Unsopport type %v", field.Type())
+			return reflect.Value{}, e
+		}
+	}
 
 	return bean, nil
 }
