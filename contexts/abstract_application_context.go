@@ -22,6 +22,7 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplic
 	ctx.metasById = make(map[string]*beans.BeanMetaData)
 	ctx.beansById = make(map[string]interface{})
 
+	// create map with (key,value)=(id,beanmeta)
 	for _, meta := range metas {
 		if old, present := ctx.metasById[meta.GetId()]; present {
 			e := fmt.Errorf("id [%s] is already used by the other bean [%v]", meta.GetId(), old)
@@ -30,57 +31,44 @@ func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplic
 		ctx.metasById[meta.GetId()] = meta
 	}
 
-	// check all reference inside beans exist
-	for _, meta := range metas {
-		for _, property := range meta.GetProperties() {
-			if _, present := ctx.metasById[property.GetReference()]; !present {
-				e := fmt.Errorf("reference [%s] of property [%s] is dose not exist", property.GetReference(), meta.GetId())
-				return nil, e
-			}
-		}
+	if e := ctx.checkProperty(); e != nil {
+		return nil, e
 	}
 
 	// check dependecy info
-	if e := ctx.checkDependencyLoop(); e != nil {
-		eout := fmt.Errorf("Detect a circle dependency. Cuased by: %v", e)
-		return nil, eout
+	if e := ctx.checkProperty(); e != nil {
+		return nil, e
 	}
 
 	return &ctx, nil
 }
 
-type node struct {
-	id     string
-	childs map[string]*node
-	isWalk bool
-}
-
-func recursive(walked []*node, cur *node) error {
-	if len(cur.childs) == 0 {
-		return nil
-	}
-	for _, ch := range cur.childs {
-		if ch.isWalk {
-			var buffer bytes.Buffer
-			for _, w := range walked {
-				buffer.WriteString("[")
-				buffer.WriteString(w.id)
-				buffer.WriteString("]>")
+func (ctx *AbstractApplicatoinContext) checkProperty() error {
+	// chack each name in a bean is unique
+	for _, meta := range ctx.metas {
+		names := make(map[string]string)
+		for _, property := range meta.GetProperties() {
+			if _, present := names[property.GetName()]; present {
+				e := fmt.Errorf("Found duplicated name [%v] in bean [%v]", property.GetName(), meta.GetId())
+				return e
 			}
-			e := fmt.Errorf("detect a loop %s[%s]", buffer.String(), ch.id)
-			return e
-		}
-	}
-	for _, ch := range cur.childs {
-		if e := recursive(append(walked, ch), ch); e != nil {
-			return e
 		}
 	}
 
-	return nil
-}
+	// check that all references exist
+	for _, meta := range ctx.metas {
+		for _, property := range meta.GetProperties() {
+			if len(property.GetReference()) == 0 {
+				continue
+			}
+			if _, present := ctx.metasById[property.GetReference()]; !present {
+				e := fmt.Errorf("reference [%s] of property [%s] is dose not exist", property.GetReference(), meta.GetId())
+				return e
+			}
+		}
+	}
 
-func (ctx *AbstractApplicatoinContext) checkDependencyLoop() error {
+	// check loop
 
 	nodes := make(map[string]*node)
 
@@ -88,7 +76,6 @@ func (ctx *AbstractApplicatoinContext) checkDependencyLoop() error {
 		nodes[meta.GetId()] = &node{
 			id:     meta.GetId(),
 			childs: make(map[string]*node),
-			isWalk: false,
 		}
 	}
 
@@ -99,9 +86,40 @@ func (ctx *AbstractApplicatoinContext) checkDependencyLoop() error {
 	}
 
 	for _, v := range nodes {
-		if e := recursive(make([]*node, 10), v); e != nil {
+		if e := walkAndCheckLoop(make(map[string]*node), v); e != nil {
 			return e
 		}
+	}
+
+	return nil
+}
+
+type node struct {
+	id     string
+	childs map[string]*node
+}
+
+func walkAndCheckLoop(walked map[string]*node, cur *node) error {
+	if len(cur.childs) == 0 {
+		return nil
+	}
+	for k, v := range cur.childs {
+		if _, present := walked[k]; present {
+			var buffer bytes.Buffer
+			for _, w := range walked {
+				buffer.WriteString("[")
+				buffer.WriteString(w.id)
+				buffer.WriteString("]>")
+			}
+			e := fmt.Errorf("detect a loop %s[%s]", buffer.String(), v.id)
+			return e
+		}
+
+		walked[k] = v
+		if e := walkAndCheckLoop(walked, v); e != nil {
+			return e
+		}
+		delete(walked, k)
 	}
 
 	return nil
