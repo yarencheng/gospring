@@ -93,3 +93,21 @@ func (suite *beanMetasBuilder_TestSuite) Test_Build_oneProperty() {
 	assert.Len(suite.T(), beans, 1)
 
 }
+
+type beanMetaBuilder_TestSuite struct {
+	suite.Suite
+}
+
+func Test_beanMetaBuilder(t *testing.T) {
+	suite.Run(t, new(beanMetaBuilder_TestSuite))
+}
+
+func (suite *beanMetaBuilder_TestSuite) SetupTest() {
+
+}
+
+func (suite *beanMetaBuilder_TestSuite) Test_ID() {
+
+	assert.Equal(suite.T(), "aa", Bean().ID("aa").id)
+
+}
