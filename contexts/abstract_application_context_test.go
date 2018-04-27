@@ -10,8 +10,8 @@ import (
 
 func TestGetBean_getSingleton(t *testing.T) {
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf(""), nil),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Singleton, reflect.TypeOf(""), nil),
 	})
 
 	bean, _ := ctx.GetBean("bean_1_id")
@@ -23,8 +23,8 @@ func TestGetBean_getSingleton(t *testing.T) {
 
 func TestGetBean_getPrototype(t *testing.T) {
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
 	})
 
 	bean, _ := ctx.GetBean("bean_1_id")
@@ -36,8 +36,8 @@ func TestGetBean_getPrototype(t *testing.T) {
 
 func TestGetBean_getSingletonTwice(t *testing.T) {
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf(""), nil),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Singleton, reflect.TypeOf(""), nil),
 	})
 
 	bean1, _ := ctx.GetBean("bean_1_id")
@@ -50,8 +50,8 @@ func TestGetBean_getSingletonTwice(t *testing.T) {
 
 func TestGetBean_getPrototypeTwice(t *testing.T) {
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
 	})
 
 	bean1, _ := ctx.GetBean("bean_1_id")
@@ -64,7 +64,7 @@ func TestGetBean_getPrototypeTwice(t *testing.T) {
 
 func TestGetBean_noSuchId(t *testing.T) {
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{})
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{})
 
 	if _, e := ctx.GetBean("bean_1_id"); e == nil {
 		t.Error()
@@ -73,9 +73,9 @@ func TestGetBean_noSuchId(t *testing.T) {
 
 func TestNewAbstractApplicatoinContext_idConfilck(t *testing.T) {
 
-	_, e := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
+	_, e := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(""), nil),
 	})
 
 	if e == nil {
@@ -91,9 +91,9 @@ func TestGetBean_getBeanWithProperty_string(t *testing.T) {
 
 	expected := "hahahaha"
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(Bean{}), []beans.PropertyMetaData{
-			*beans.NewPropertyMetaData("Property_1", "", expected),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(Bean{}), []beans.PropertyMetaData_old{
+			*beans.NewPropertyMetaData_old("Property_1", "", expected),
 		}),
 	})
 
@@ -116,9 +116,9 @@ func TestGetBean_getBeanWithProperty_int(t *testing.T) {
 
 	expected := 123
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(Bean{}), []beans.PropertyMetaData{
-			*beans.NewPropertyMetaData("Property_1", "", strconv.Itoa(expected)),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(Bean{}), []beans.PropertyMetaData_old{
+			*beans.NewPropertyMetaData_old("Property_1", "", strconv.Itoa(expected)),
 		}),
 	})
 
@@ -140,10 +140,10 @@ func TestGetBean_getBeanWithProperty_singletonBean(t *testing.T) {
 		Bean1 *Bean1
 	}
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf(Bean1{}), nil),
-		beans.NewBeanMetaData("bean_2_id", beans.Singleton, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData{
-			*beans.NewPropertyMetaData("Bean1", "bean_1_id", ""),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Singleton, reflect.TypeOf(Bean1{}), nil),
+		beans.NewBeanMetaData_old("bean_2_id", beans.Singleton, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData_old{
+			*beans.NewPropertyMetaData_old("Bean1", "bean_1_id", ""),
 		}),
 	})
 
@@ -172,10 +172,10 @@ func TestGetBean_getBeanWithProperty_singletonBean_notPointer(t *testing.T) {
 		Bean1 Bean1 // not pointer
 	}
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Singleton, reflect.TypeOf(Bean1{}), nil),
-		beans.NewBeanMetaData("bean_2_id", beans.Singleton, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData{
-			*beans.NewPropertyMetaData("Bean1", "bean_1_id", ""),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Singleton, reflect.TypeOf(Bean1{}), nil),
+		beans.NewBeanMetaData_old("bean_2_id", beans.Singleton, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData_old{
+			*beans.NewPropertyMetaData_old("Bean1", "bean_1_id", ""),
 		}),
 	})
 
@@ -195,10 +195,10 @@ func TestGetBean_getBeanWithProperty_prototypeBean_copyPointer(t *testing.T) {
 		Bean1 *Bean1
 	}
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(Bean1{}), nil),
-		beans.NewBeanMetaData("bean_2_id", beans.Prototype, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData{
-			*beans.NewPropertyMetaData("Bean1", "bean_1_id", ""),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(Bean1{}), nil),
+		beans.NewBeanMetaData_old("bean_2_id", beans.Prototype, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData_old{
+			*beans.NewPropertyMetaData_old("Bean1", "bean_1_id", ""),
 		}),
 	})
 
@@ -241,12 +241,12 @@ func TestGetBean_getBeanWithProperty_prototypeBean_copyValue(t *testing.T) {
 
 	expected := 123
 
-	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData{
-		beans.NewBeanMetaData("bean_1_id", beans.Prototype, reflect.TypeOf(Bean1{}), []beans.PropertyMetaData{
-			*beans.NewPropertyMetaData("I", "", strconv.Itoa(expected)),
+	ctx, _ := NewAbstractApplicatoinContext([]*beans.BeanMetaData_old{
+		beans.NewBeanMetaData_old("bean_1_id", beans.Prototype, reflect.TypeOf(Bean1{}), []beans.PropertyMetaData_old{
+			*beans.NewPropertyMetaData_old("I", "", strconv.Itoa(expected)),
 		}),
-		beans.NewBeanMetaData("bean_2_id", beans.Prototype, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData{
-			*beans.NewPropertyMetaData("Bean1", "bean_1_id", ""),
+		beans.NewBeanMetaData_old("bean_2_id", beans.Prototype, reflect.TypeOf(Bean2{}), []beans.PropertyMetaData_old{
+			*beans.NewPropertyMetaData_old("Bean1", "bean_1_id", ""),
 		}),
 	})
 

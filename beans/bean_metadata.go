@@ -2,15 +2,22 @@ package beans
 
 import "reflect"
 
-type BeanMetaData struct {
+type BeanMetaData interface {
+	GetId() string
+	GetProperties() []PropertyMetaData
+	GetScope() Scope
+	GetType() reflect.Type
+}
+
+type BeanMetaData_old struct {
 	id         string
 	scope      Scope
 	ztruct     reflect.Type
-	properties []PropertyMetaData
+	properties []PropertyMetaData_old
 }
 
-func NewBeanMetaData(id string, scope Scope, ztruct reflect.Type, properties []PropertyMetaData) *BeanMetaData {
-	return &BeanMetaData{
+func NewBeanMetaData_old(id string, scope Scope, ztruct reflect.Type, properties []PropertyMetaData_old) *BeanMetaData_old {
+	return &BeanMetaData_old{
 		id:         id,
 		scope:      scope,
 		ztruct:     ztruct,
@@ -18,20 +25,20 @@ func NewBeanMetaData(id string, scope Scope, ztruct reflect.Type, properties []P
 	}
 }
 
-func (meta *BeanMetaData) GetId() string {
+func (meta *BeanMetaData_old) GetId() string {
 	return meta.id
 }
 
-func (meta *BeanMetaData) GetScope() Scope {
+func (meta *BeanMetaData_old) GetScope() Scope {
 	return meta.scope
 }
 
-func (meta *BeanMetaData) GetStruct() reflect.Type {
+func (meta *BeanMetaData_old) GetStruct() reflect.Type {
 	return meta.ztruct
 }
 
-func (meta *BeanMetaData) GetProperties() []PropertyMetaData {
-	tmp := make([]PropertyMetaData, len(meta.properties))
+func (meta *BeanMetaData_old) GetProperties() []PropertyMetaData_old {
+	tmp := make([]PropertyMetaData_old, len(meta.properties))
 	copy(tmp, meta.properties)
 	return tmp
 }

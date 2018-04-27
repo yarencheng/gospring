@@ -1,27 +1,34 @@
 package beans
 
-type PropertyMetaData struct {
+type PropertyMetaData interface {
+	GetName() string
+	GetReference() string
+	GetBean() BeanMetaData
+	IsReference() bool
+}
+
+type PropertyMetaData_old struct {
 	name      string
 	reference string
 	value     string
 }
 
-func NewPropertyMetaData(name string, reference string, value string) *PropertyMetaData {
-	return &PropertyMetaData{
+func NewPropertyMetaData_old(name string, reference string, value string) *PropertyMetaData_old {
+	return &PropertyMetaData_old{
 		name:      name,
 		reference: reference,
 		value:     value,
 	}
 }
 
-func (meta *PropertyMetaData) GetName() string {
+func (meta *PropertyMetaData_old) GetName() string {
 	return meta.name
 }
 
-func (meta *PropertyMetaData) GetReference() string {
+func (meta *PropertyMetaData_old) GetReference() string {
 	return meta.reference
 }
 
-func (meta *PropertyMetaData) GetValue() string {
+func (meta *PropertyMetaData_old) GetValue() string {
 	return meta.value
 }

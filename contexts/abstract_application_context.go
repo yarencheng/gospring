@@ -11,16 +11,16 @@ import (
 )
 
 type AbstractApplicatoinContext struct {
-	metas     []*beans.BeanMetaData
-	metasById map[string]*beans.BeanMetaData
+	metas     []*beans.BeanMetaData_old
+	metasById map[string]*beans.BeanMetaData_old
 	beansById map[string]reflect.Value
 }
 
-func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData) (*AbstractApplicatoinContext, error) {
+func NewAbstractApplicatoinContext(metas []*beans.BeanMetaData_old) (*AbstractApplicatoinContext, error) {
 
 	var ctx AbstractApplicatoinContext
 	ctx.metas = metas
-	ctx.metasById = make(map[string]*beans.BeanMetaData)
+	ctx.metasById = make(map[string]*beans.BeanMetaData_old)
 	ctx.beansById = make(map[string]reflect.Value)
 
 	// create map with (key,value)=(id,beanmeta)
@@ -164,7 +164,7 @@ func (ctx *AbstractApplicatoinContext) getBean(id string) (reflect.Value, error)
 	}
 }
 
-func (ctx *AbstractApplicatoinContext) getSingletonBean(meta *beans.BeanMetaData) (reflect.Value, error) {
+func (ctx *AbstractApplicatoinContext) getSingletonBean(meta *beans.BeanMetaData_old) (reflect.Value, error) {
 
 	if bean, present := ctx.beansById[meta.GetId()]; present {
 		return bean, nil
@@ -181,7 +181,7 @@ func (ctx *AbstractApplicatoinContext) getSingletonBean(meta *beans.BeanMetaData
 	return bean, nil
 }
 
-func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData) (reflect.Value, error) {
+func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData_old) (reflect.Value, error) {
 
 	bean := reflect.New(meta.GetStruct())
 
@@ -242,7 +242,7 @@ func (ctx *AbstractApplicatoinContext) getPrototypeBean(meta *beans.BeanMetaData
 				e := fmt.Errorf("[%v] can't convert to int. Caused by: %v", p.GetValue(), e)
 				return reflect.Value{}, e
 			}
-			field.SetInt(i)
+			field.Set(reflect.ValueOf(int(i)))
 		default:
 			e := fmt.Errorf("Unsopport type %v", field.Type())
 			return reflect.Value{}, e
