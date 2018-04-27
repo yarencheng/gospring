@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
 // MockPropertyMetaData is a mock of PropertyMetaData interface
@@ -33,9 +34,20 @@ func (m *MockPropertyMetaData) IsReference() bool {
 	return args.Bool(0)
 }
 
-func Test_bean_GetProperties(t *testing.T) {
+type bean_TestSuite struct {
+	suite.Suite
+}
 
-	ctrl := gomock.NewController(t)
+func Test_bean(t *testing.T) {
+	suite.Run(t, new(bean_TestSuite))
+}
+
+func (suite *bean_TestSuite) SetupTest() {
+
+}
+
+func (suite *bean_TestSuite) TestGetProperties() {
+	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 
 	expect := make([]PropertyMetaData, 1)
@@ -47,5 +59,5 @@ func Test_bean_GetProperties(t *testing.T) {
 
 	actual := bean.GetProperties()
 
-	assert.ElementsMatch(t, expect, actual)
+	assert.ElementsMatch(suite.T(), expect, actual)
 }
