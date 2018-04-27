@@ -111,3 +111,9 @@ func (suite *beanMetaBuilder_TestSuite) Test_ID() {
 	assert.Equal(suite.T(), "aa", Bean().ID("aa").id)
 
 }
+
+func (suite *beanMetaBuilder_TestSuite) Test_Name() {
+
+	assert.Equal(suite.T(), "aa", Bean().Name("aa").name)
+
+}
