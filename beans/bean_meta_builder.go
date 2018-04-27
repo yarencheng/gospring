@@ -36,18 +36,18 @@ type beanMetasBuilder struct {
 
 func Beans(bs ...*beanMetaBuilder) *beanMetasBuilder {
 	var builder beanMetasBuilder
-	builder.beans = make([]*beanMetaBuilder, 10)
+	builder.beans = bs
 	return &builder
 }
 
 func (b *beanMetasBuilder) Build() ([]BeanMetaData, error) {
 	beans := make([]BeanMetaData, len(b.beans))
-	for _, bean := range b.beans {
+	for i, bean := range b.beans {
 		meta, e := bean.Build()
 		if e != nil {
 			return nil, e
 		}
-		beans = append(beans, meta)
+		beans[i] = meta
 	}
 
 	// TODO: sanity check
@@ -68,7 +68,7 @@ func Bean() *beanMetaBuilder {
 
 	b.id = ""
 	b.name = ""
-	b.properties = make([]propertyMetaBuilder, 10)
+	b.properties = make([]propertyMetaBuilder, 0)
 	b.scope = Singleton
 
 	return &b
