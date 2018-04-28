@@ -114,7 +114,7 @@ func (ctx *applicationContext) GetPrototypeBean(b *bean) (reflect.Value, error) 
 			}
 
 		case propertyTypeRef:
-			id := b.pros[name].Interface().(string)
+			id := b.pros[name].Interface().(*refBean).ref
 			pb := ctx.beanById[id]
 			value, valueError = ctx.getBean(pb)
 			if valueError != nil {
