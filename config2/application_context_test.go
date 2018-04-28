@@ -170,3 +170,51 @@ func Test_applicationContext_GetBean_prototype_struct(t *testing.T) {
 
 	assert.NotEqual(t, unsafe.Pointer(s1), unsafe.Pointer(s2))
 }
+
+func Test_applicationContext_GetBean_withBeanProperty_andIsPointer(t *testing.T) {
+
+	// arrange
+	type beanStruct1 struct{ S string }
+	type beanStruct2 struct{ Bean1 *beanStruct1 }
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct2{}).Id("Bean2").
+			PropertyBean("Bean1", Bean(beanStruct1{})),
+	))
+
+	// action
+	bean, e := ctx.GetBean("Bean2")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	s, ok := bean.(*beanStruct2)
+	assert.True(t, ok)
+
+	assert.NotNil(t, s.Bean1)
+}
+
+func Test_applicationContext_GetBean_withBeanProperty_andIsNotPointer(t *testing.T) {
+
+	// arrange
+	type beanStruct1 struct{ S string }
+	type beanStruct2 struct{ Bean1 beanStruct1 }
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct2{}).Id("Bean2").
+			PropertyBean("Bean1",
+				Bean(beanStruct1{}).PropertyValue("S", "ss"),
+			),
+	))
+
+	// action
+	bean, e := ctx.GetBean("Bean2")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	s, ok := bean.(*beanStruct2)
+	assert.True(t, ok)
+
+	assert.Equal(t, "ss", s.Bean1.S)
+}

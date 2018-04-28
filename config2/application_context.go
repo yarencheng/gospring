@@ -122,7 +122,9 @@ func (ctx *applicationContext) GetPrototypeBean(b *bean) (reflect.Value, error) 
 			}
 
 		case propertyTypeValue:
-			value = b.pros[name]
+			value = reflect.New(b.pros[name].Type())
+			value.Elem().Set(b.pros[name])
+
 		default:
 			return reflect.Value{}, fmt.Errorf("Type of property [%v] is unknown", type_)
 		}

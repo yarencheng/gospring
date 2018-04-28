@@ -52,6 +52,7 @@ func Bean(i interface{}) *bean {
 		factoryFnArgv: make([]reflect.Value, 0),
 		scope:         scopeDefault,
 		pros:          make(map[string]reflect.Value),
+		prosType:      make(map[string]propertyType),
 	}
 }
 
