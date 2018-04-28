@@ -122,7 +122,7 @@ func (s *config_suite) Test_Config_GetBean_beanIsPrototype() {
 	assert.NotEqual(s.T(), unsafe.Pointer(s1), unsafe.Pointer(s2))
 }
 
-func (s *config_suite) Test_Config_GetBean_withIntPropertyInside() {
+func (s *config_suite) Test_Config_GetBean_withIntPropertyInside_useStringAsValue() {
 
 	// arrange
 
@@ -131,7 +131,7 @@ func (s *config_suite) Test_Config_GetBean_withIntPropertyInside() {
 
 	config := Config(
 		Bean(id, reflect.TypeOf(beanStruct{})).Prototype().With(
-			Value("I", "123"),
+			Value("I", "123"), // use string
 		),
 	)
 
