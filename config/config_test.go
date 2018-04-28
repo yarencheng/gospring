@@ -14,7 +14,7 @@ type config_suite struct { // suite for level 1
 	suite.Suite
 }
 
-func Test_sss(t *testing.T) {
+func Test_config(t *testing.T) {
 	suite.Run(t, new(config_suite))
 }
 
@@ -188,4 +188,78 @@ func (s *config_suite) Test_Config_GetBean_withStringPropertyInside() {
 
 	// assert
 	assert.Equal(s.T(), "a string property", bean.S)
+}
+
+func (s *config_suite) Test_Config_GetBean_withRefPropertyInside_andIsValue() {
+
+	// arrange
+
+	type bean1Struct struct{ S string }
+	type bean2Struct struct{ Bean1 bean1Struct } // value, bean property
+
+	config := Config(
+		Bean("id1", reflect.TypeOf(bean1Struct{})).Prototype().With(
+			Value("S", "a string property"),
+		),
+		Bean("id2", reflect.TypeOf(bean2Struct{})).Prototype().With(
+			Ref("Bean1", "id1"),
+		),
+	)
+
+	// action
+
+	var e error
+	var ctx *applicationContext
+	var i interface{}
+	var bean *bean2Struct
+	var ok bool
+
+	ctx, e = ApplicationContext(config)
+	assert.NoError(s.T(), e)
+
+	i, e = ctx.GetBean("id2")
+	assert.NoError(s.T(), e)
+
+	bean, ok = i.(*bean2Struct)
+	assert.True(s.T(), ok)
+
+	// assert
+	assert.Equal(s.T(), "a string property", bean.Bean1.S)
+}
+
+func (s *config_suite) Test_Config_GetBean_withRefPropertyInside_andIsPointer() {
+
+	// arrange
+
+	type bean1Struct struct{ S string }
+	type bean2Struct struct{ Bean1 *bean1Struct } // pointer, bean property
+
+	config := Config(
+		Bean("id1", reflect.TypeOf(bean1Struct{})).Prototype().With(
+			Value("S", "a string property"),
+		),
+		Bean("id2", reflect.TypeOf(bean2Struct{})).Prototype().With(
+			Ref("Bean1", "id1"),
+		),
+	)
+
+	// action
+
+	var e error
+	var ctx *applicationContext
+	var i interface{}
+	var bean *bean2Struct
+	var ok bool
+
+	ctx, e = ApplicationContext(config)
+	assert.NoError(s.T(), e)
+
+	i, e = ctx.GetBean("id2")
+	assert.NoError(s.T(), e)
+
+	bean, ok = i.(*bean2Struct)
+	assert.True(s.T(), ok)
+
+	// assert
+	assert.Equal(s.T(), "a string property", bean.Bean1.S)
 }

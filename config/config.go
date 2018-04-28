@@ -194,7 +194,7 @@ func (ctx *applicationContext) GetPrototypeBean(bean *bean) (reflect.Value, erro
 		case pBean:
 			e = fmt.Errorf("TODO")
 		case pReference:
-			e = fmt.Errorf("TODO")
+			e = ctx.setRefField(field, p.ref)
 		default:
 			return reflect.Value{}, fmt.Errorf("type of member named [%v] in struct [%v] is unknown", p.name, bean.type_.Name())
 		}
@@ -220,6 +220,47 @@ func (ctx *applicationContext) setNativeField(field reflect.Value, value string)
 		field.Set(reflect.ValueOf(int(i)))
 	default:
 		return fmt.Errorf("Unsopport type %v", field.Type())
+	}
+
+	return nil
+}
+
+func (ctx *applicationContext) setRefField(field reflect.Value, id string) error {
+
+	bean, e := ctx.getBean(id)
+
+	if e != nil {
+		return fmt.Errorf("Can't get bean with id [%v]. Caused by: %v", id, e)
+	}
+
+	switch field.Type().Kind() {
+	case reflect.Ptr:
+		if bean.Type().Elem() != field.Type().Elem() {
+
+			return fmt.Errorf(
+				"type of field [%v] and type of bean [%v] is different.",
+				field.Type().Elem().Name(),
+				bean.Type().Elem().Name(),
+			)
+		}
+
+		field.Set(bean)
+
+	case reflect.Struct:
+
+		if bean.Type().Elem() != field.Type() {
+
+			return fmt.Errorf(
+				"type of field [%v] and type of bean [%v] is different.",
+				field.Type().Name(),
+				bean.Type().Elem().Name(),
+			)
+		}
+
+		field.Set(bean.Elem())
+
+	default:
+		return fmt.Errorf("[%v] dose not support", field.Type())
 	}
 
 	return nil
