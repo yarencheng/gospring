@@ -69,6 +69,22 @@
 			"versionExact": "v1.2.1"
 		},
 		{
+			"checksumSHA1": "rgS26tbD9zdX0xvmSH44lW3FMsA=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
+			"revisionTime": "2018-01-31T22:23:50Z",
+			"version": "v1",
+			"versionExact": "v1.2.1"
+		},
+		{
+			"checksumSHA1": "uefllr2OtKBGo/kQSAPbW3w6p0A=",
+			"path": "github.com/stretchr/testify/suite",
+			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
+			"revisionTime": "2018-01-31T22:23:50Z",
+			"version": "v1",
+			"versionExact": "v1.2.1"
+		},
+		{
 			"checksumSHA1": "oNgNrI8Qr4y4+e+NAbq/Te5q6ZI=",
 			"path": "github.com/thoas/go-funk",
 			"revision": "14304e8530de7dbb909c8305591b3a8370dd9dbb",
