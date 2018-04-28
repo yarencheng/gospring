@@ -85,7 +85,7 @@ type property struct {
 	type_ propertyType
 	ref   string
 	bean  *bean
-	value string
+	value interface{}
 }
 
 func Ref(name, ref string) *property {
@@ -104,7 +104,7 @@ func PropertyBean(name string, b *bean) *property {
 	}
 }
 
-func Value(name string, v string) *property {
+func Value(name string, v interface{}) *property {
 	return &property{
 		name:  name,
 		type_: pValue,
@@ -227,17 +227,28 @@ func (ctx *applicationContext) GetPrototypeBean(bean *bean) (reflect.Value, erro
 	return v, nil
 }
 
-func (ctx *applicationContext) setNativeField(field reflect.Value, value string) error {
+func (ctx *applicationContext) setNativeField(field reflect.Value, value interface{}) error {
 
 	switch field.Type().Kind() {
 	case reflect.String:
-		field.Set(reflect.ValueOf(value))
-	case reflect.Int:
-		i, e := strconv.ParseInt(value, 10, 32)
-		if e != nil {
-			return fmt.Errorf("[%v] can't convert to int. Caused by: %v", value, e)
+		switch reflect.TypeOf(value).Kind() {
+		case reflect.String:
+			field.Set(reflect.ValueOf(value))
+		default:
+			return fmt.Errorf("Unsopport type %v", reflect.TypeOf(value))
 		}
-		field.Set(reflect.ValueOf(int(i)))
+
+	case reflect.Int:
+		switch reflect.TypeOf(value).Kind() {
+		case reflect.String:
+			i, e := strconv.ParseInt(value.(string), 10, 32)
+			if e != nil {
+				return fmt.Errorf("[%v] can't convert to int. Caused by: %v", value, e)
+			}
+			field.Set(reflect.ValueOf(int(i)))
+		default:
+			return fmt.Errorf("Unsopport type %v", reflect.TypeOf(value))
+		}
 	default:
 		return fmt.Errorf("Unsopport type %v", field.Type())
 	}
