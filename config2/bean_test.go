@@ -59,10 +59,11 @@ func Test_bean_new_withDefaultFunction(t *testing.T) {
 func Test_bean_new_withCostumeFunction(t *testing.T) {
 	// arrange
 	isExecute := false
-	b := Bean(int(9999)).Factory(func() (int, error) {
-		isExecute = true
-		return int(777), nil
-	})
+	b := Bean(int(9999)).
+		Factory(func() (int, error) {
+			isExecute = true
+			return int(777), nil
+		})
 
 	// action
 	r, e := b.new()
@@ -75,6 +76,28 @@ func Test_bean_new_withCostumeFunction(t *testing.T) {
 	actual, ok := r.(int)
 	assert.True(t, ok)
 	assert.Equal(t, 777, actual)
+}
+
+func Test_bean_new_withCostumeFunction_withArgv(t *testing.T) {
+	// arrange
+	isExecute := false
+	b := Bean(int(9999)).
+		Factory(func(i int) (int, error) {
+			isExecute = true
+			return i + 1, nil
+		}, 777)
+
+	// action
+	r, e := b.new()
+	if e != nil {
+		t.FailNow()
+	}
+
+	// assert
+	assert.True(t, isExecute)
+	actual, ok := r.(int)
+	assert.True(t, ok)
+	assert.Equal(t, 778, actual)
 }
 
 func Test_bean_new_withCostumeFunction_returnError(t *testing.T) {
