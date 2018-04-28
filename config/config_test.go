@@ -269,12 +269,13 @@ func (s *config_suite) Test_Config_GetBean_withBeanPropertyInside_andWithoutId()
 	// arrange
 
 	type bean1Struct struct{ S string }
-	type bean2Struct struct{ Bean1 *bean1Struct } // pointer, bean property
+	type bean2Struct struct{ Bean1 *bean1Struct }
 
 	config := Config(
 		Bean("id2", reflect.TypeOf(bean2Struct{})).Prototype().
 			With(
 				PropertyBean("Bean1",
+					// without ID
 					BeanNoID(reflect.TypeOf(bean1Struct{})).Prototype().
 						With(
 							Value("S", "a string property"),
@@ -300,7 +301,7 @@ func (s *config_suite) Test_Config_GetBean_withBeanPropertyInside_andWithoutId()
 	assert.True(s.T(), ok)
 
 	// assert
-	assert.Equal(s.T(), "a string property", bean.Bean1.S)
+	assert.Equal(s.T(), &bean1Struct{S: "a string property"}, bean.Bean1)
 }
 
 func (s *config_suite) Test_Config_GetBean_withBeanPropertyInside_andWithId() {
@@ -308,12 +309,13 @@ func (s *config_suite) Test_Config_GetBean_withBeanPropertyInside_andWithId() {
 	// arrange
 
 	type bean1Struct struct{ S string }
-	type bean2Struct struct{ Bean1 *bean1Struct } // pointer, bean property
+	type bean2Struct struct{ Bean1 *bean1Struct }
 
 	config := Config(
 		Bean("id2", reflect.TypeOf(bean2Struct{})).Prototype().
 			With(
 				PropertyBean("Bean1",
+					// with ID
 					Bean("id1", reflect.TypeOf(bean1Struct{})).Prototype().
 						With(
 							Value("S", "a string property"),
@@ -339,5 +341,5 @@ func (s *config_suite) Test_Config_GetBean_withBeanPropertyInside_andWithId() {
 	assert.True(s.T(), ok)
 
 	// assert
-	assert.Equal(s.T(), "a string property", bean.Bean1.S)
+	assert.Equal(s.T(), &bean1Struct{S: "a string property"}, bean.Bean1)
 }
