@@ -156,6 +156,40 @@ func (s *config_suite) Test_Config_GetBean_withIntPropertyInside_useStringAsValu
 	assert.Equal(s.T(), 123, bean.I)
 }
 
+func (s *config_suite) Test_Config_GetBean_withIntPropertyInside_useIntAsValue() {
+
+	// arrange
+
+	type beanStruct struct{ I int } // with a int property
+	id := "iiiidddd"
+
+	config := Config(
+		Bean(id, reflect.TypeOf(beanStruct{})).Prototype().With(
+			Value("I", int(123)), // use int
+		),
+	)
+
+	// action
+
+	var e error
+	var ctx *applicationContext
+	var i interface{}
+	var bean *beanStruct
+	var ok bool
+
+	ctx, e = ApplicationContext(config)
+	assert.NoError(s.T(), e)
+
+	i, e = ctx.GetBean(id)
+	assert.NoError(s.T(), e)
+
+	bean, ok = i.(*beanStruct)
+	assert.True(s.T(), ok)
+
+	// assert
+	assert.Equal(s.T(), 123, bean.I)
+}
+
 func (s *config_suite) Test_Config_GetBean_withStringPropertyInside() {
 
 	// arrange

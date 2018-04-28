@@ -246,6 +246,8 @@ func (ctx *applicationContext) setNativeField(field reflect.Value, value interfa
 				return fmt.Errorf("[%v] can't convert to int. Caused by: %v", value, e)
 			}
 			field.Set(reflect.ValueOf(int(i)))
+		case reflect.Int:
+			field.Set(reflect.ValueOf(value))
 		default:
 			return fmt.Errorf("Unsopport type %v", reflect.TypeOf(value))
 		}
