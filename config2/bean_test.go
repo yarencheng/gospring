@@ -19,9 +19,9 @@ func Test_getDefaultFactoryFn_string(t *testing.T) {
 	}
 
 	// assert
-	actual, ok := rvs[0].Interface().(string)
+	actual, ok := rvs[0].Interface().(*string)
 	assert.True(t, ok)
-	assert.Equal(t, "", actual)
+	assert.Equal(t, "", *actual)
 }
 
 func Test_getDefaultFactoryFn_int(t *testing.T) {
@@ -35,9 +35,26 @@ func Test_getDefaultFactoryFn_int(t *testing.T) {
 	}
 
 	// assert
-	actual, ok := rvs[0].Interface().(int)
+	actual, ok := rvs[0].Interface().(*int)
 	assert.True(t, ok)
-	assert.Equal(t, 0, actual)
+	assert.Equal(t, 0, *actual)
+}
+
+func Test_getDefaultFactoryFn_struct(t *testing.T) {
+	// arrange
+	type beanStruct struct{ S string }
+
+	// action
+	v := getDefaultFactoryFn(reflect.TypeOf(beanStruct{}))
+	rvs := (*v).Call(nil)
+	if !rvs[1].IsNil() {
+		t.FailNow()
+	}
+
+	// assert
+	actual := rvs[0].Interface().(*beanStruct)
+	// assert.True(t, ok)
+	assert.Equal(t, beanStruct{}, *actual)
 }
 
 func Test_bean_new_withDefaultFunction(t *testing.T) {
@@ -51,18 +68,19 @@ func Test_bean_new_withDefaultFunction(t *testing.T) {
 	}
 
 	// assert
-	actual, ok := r.(int)
+	actual, ok := r.(*int)
 	assert.True(t, ok)
-	assert.Equal(t, 0, actual)
+	assert.Equal(t, 0, *actual)
 }
 
 func Test_bean_new_withCostumeFunction(t *testing.T) {
 	// arrange
 	isExecute := false
 	b := Bean(int(9999)).
-		Factory(func() (int, error) {
+		Factory(func() (*int, error) {
 			isExecute = true
-			return int(777), nil
+			i := int(777)
+			return &i, nil
 		})
 
 	// action
@@ -73,18 +91,19 @@ func Test_bean_new_withCostumeFunction(t *testing.T) {
 
 	// assert
 	assert.True(t, isExecute)
-	actual, ok := r.(int)
+	actual, ok := r.(*int)
 	assert.True(t, ok)
-	assert.Equal(t, 777, actual)
+	assert.Equal(t, 777, *actual)
 }
 
 func Test_bean_new_withCostumeFunction_withArgv(t *testing.T) {
 	// arrange
 	isExecute := false
 	b := Bean(int(9999)).
-		Factory(func(i int) (int, error) {
+		Factory(func(i int) (*int, error) {
 			isExecute = true
-			return i + 1, nil
+			ii := int(i + 1)
+			return &ii, nil
 		}, 777)
 
 	// action
@@ -95,9 +114,9 @@ func Test_bean_new_withCostumeFunction_withArgv(t *testing.T) {
 
 	// assert
 	assert.True(t, isExecute)
-	actual, ok := r.(int)
+	actual, ok := r.(*int)
 	assert.True(t, ok)
-	assert.Equal(t, 778, actual)
+	assert.Equal(t, 778, *actual)
 }
 
 func Test_bean_new_withCostumeFunction_returnError(t *testing.T) {
@@ -123,7 +142,7 @@ func Test_bean_Singleton(t *testing.T) {
 	b := Bean("").Singleton()
 
 	// assert
-	assert.Equal(t, singleton, b.scope)
+	assert.Equal(t, scopeSingleton, b.scope)
 }
 
 func Test_bean_Prototype(t *testing.T) {
@@ -133,5 +152,5 @@ func Test_bean_Prototype(t *testing.T) {
 	b := Bean("").Prototype()
 
 	// assert
-	assert.Equal(t, prototype, b.scope)
+	assert.Equal(t, scopePrototype, b.scope)
 }
