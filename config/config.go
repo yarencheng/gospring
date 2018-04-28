@@ -49,6 +49,14 @@ func Bean(id string, type_ reflect.Type) *bean {
 	}
 }
 
+func BeanNoID(type_ reflect.Type) *bean {
+	return &bean{
+		type_: type_,
+		scope: singleton,
+		pros:  make([]*property, 0),
+	}
+}
+
 func (b *bean) Singleton() *bean {
 	b.scope = singleton
 	return b
@@ -116,19 +124,31 @@ func ApplicationContext(config *config) (*applicationContext, error) {
 		return nil, fmt.Errorf("Configuration is not valid")
 	}
 
-	return &applicationContext{
-		config: config,
-		beanById: func() map[string]*bean {
-
-			m := make(map[string]*bean)
-			for _, bean := range config.beans {
-				m[bean.id] = bean
-			}
-
-			return m
-		}(),
+	ctx := &applicationContext{
+		config:        config,
+		beanById:      make(map[string]*bean),
 		singletonById: make(map[string]reflect.Value),
-	}, nil
+	}
+
+	for _, b := range config.beans {
+		ctx.getBeanByIDRecursive(b)
+	}
+
+	return ctx, nil
+}
+
+func (ctx *applicationContext) getBeanByIDRecursive(b *bean) {
+
+	if len(b.id) > 0 {
+		ctx.beanById[b.id] = b
+	}
+
+	for _, p := range b.pros {
+		if p.type_ != pBean {
+			continue
+		}
+		ctx.getBeanByIDRecursive(p.bean)
+	}
 }
 
 func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
@@ -192,9 +212,9 @@ func (ctx *applicationContext) GetPrototypeBean(bean *bean) (reflect.Value, erro
 		case pValue:
 			e = ctx.setNativeField(field, p.value)
 		case pBean:
-			e = fmt.Errorf("TODO")
+			e = ctx.setBeanField(field, p)
 		case pReference:
-			e = ctx.setRefField(field, p.ref)
+			e = ctx.setBeanField(field, p)
 		default:
 			return reflect.Value{}, fmt.Errorf("type of member named [%v] in struct [%v] is unknown", p.name, bean.type_.Name())
 		}
@@ -225,12 +245,23 @@ func (ctx *applicationContext) setNativeField(field reflect.Value, value string)
 	return nil
 }
 
-func (ctx *applicationContext) setRefField(field reflect.Value, id string) error {
+func (ctx *applicationContext) setBeanField(field reflect.Value, p *property) error {
 
-	bean, e := ctx.getBean(id)
+	var bean reflect.Value
+	var e error
+
+	if p.type_ == pReference {
+		bean, e = ctx.getBean(p.ref)
+	} else if p.type_ == pBean && len(p.bean.id) > 0 {
+		bean, e = ctx.getBean(p.bean.id)
+	} else if p.type_ == pBean && len(p.bean.id) == 0 {
+		bean, e = ctx.GetPrototypeBean(p.bean)
+	} else {
+		return fmt.Errorf("Get unknown state and should not run into here")
+	}
 
 	if e != nil {
-		return fmt.Errorf("Can't get bean with id [%v]. Caused by: %v", id, e)
+		return fmt.Errorf("Can't get bean for property [%v]. Caused by: %v", p.name, e)
 	}
 
 	switch field.Type().Kind() {
