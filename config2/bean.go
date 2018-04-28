@@ -70,11 +70,11 @@ func getDefaultFactoryFn(t reflect.Type) *reflect.Value {
 
 	switch t.Kind() {
 	case reflect.String:
-		fn = func() (interface{}, error) {
+		fn = func() (string, error) {
 			return "", nil
 		}
 	case reflect.Int:
-		fn = func() (interface{}, error) {
+		fn = func() (int, error) {
 			return int(0), nil
 		}
 	default:
