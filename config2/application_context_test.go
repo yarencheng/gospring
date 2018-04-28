@@ -266,3 +266,45 @@ func Test_applicationContext_GetBean_withRefbeanProperty_andIsNotPointer(t *test
 
 	assert.Equal(t, "ss", s.Bean1.S)
 }
+
+func Test_applicationContext_GetBean_withValueProperty_andIsPointer(t *testing.T) {
+
+	// arrange
+	type beanStruct struct{ S *string }
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct{}).Id("Bean1").PropertyValue("S", "ss"),
+	))
+
+	// action
+	bean, e := ctx.GetBean("Bean1")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	s, ok := bean.(*beanStruct)
+	assert.True(t, ok)
+
+	assert.Equal(t, "ss", *s.S)
+}
+
+func Test_applicationContext_GetBean_withValueProperty_andIsNotPointer(t *testing.T) {
+
+	// arrange
+	type beanStruct struct{ S string }
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct{}).Id("Bean1").PropertyValue("S", "ss"),
+	))
+
+	// action
+	bean, e := ctx.GetBean("Bean1")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	s, ok := bean.(*beanStruct)
+	assert.True(t, ok)
+
+	assert.Equal(t, "ss", s.S)
+}
