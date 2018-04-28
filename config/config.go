@@ -80,8 +80,9 @@ func PropertyBean(name string, b *bean) *property {
 }
 
 type applicationContext struct {
-	config   *config
-	beanById map[string]*bean
+	config        *config
+	beanById      map[string]*bean
+	singletonById map[string]reflect.Value
 }
 
 func ApplicationContext(config *config) (*applicationContext, error) {
@@ -101,14 +102,50 @@ func ApplicationContext(config *config) (*applicationContext, error) {
 
 			return m
 		}(),
+		singletonById: make(map[string]reflect.Value),
 	}, nil
 }
 
 func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
+	v, e := ctx.getBean(id)
+	if e != nil {
+		return nil, e
+	}
+	return v.Interface(), nil
+}
+
+func (ctx *applicationContext) getBean(id string) (reflect.Value, error) {
 	bean, present := ctx.beanById[id]
 	if !present {
-		return nil, fmt.Errorf("no bean with id [%v]", id)
+		return reflect.Value{}, fmt.Errorf("no bean with id [%v]", id)
 	}
-	v := reflect.New(bean.type_)
-	return v.Interface(), nil
+
+	switch bean.scope {
+	case singleton:
+		return ctx.GetSingleTonBean(bean)
+	case prototype:
+		return ctx.GetPrototypeBean(bean)
+	default:
+		return reflect.Value{}, fmt.Errorf("unsupport scope [%v]", bean.scope)
+	}
+}
+
+func (ctx *applicationContext) GetSingleTonBean(bean *bean) (reflect.Value, error) {
+
+	if v, present := ctx.singletonById[bean.id]; present {
+		return v, nil
+	}
+
+	v, e := ctx.GetPrototypeBean(bean)
+	if e != nil {
+		return reflect.Value{}, fmt.Errorf("Can't create bean [%v]. Cuased by: %v", bean.id, e)
+	}
+
+	ctx.singletonById[bean.id] = v
+
+	return v, nil
+}
+
+func (ctx *applicationContext) GetPrototypeBean(bean *bean) (reflect.Value, error) {
+	return reflect.New(bean.type_), nil
 }
