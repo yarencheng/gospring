@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 type config struct {
@@ -13,13 +14,7 @@ type bean struct {
 	id    string
 	type_ reflect.Type
 	scope scope
-}
-
-type property struct {
-	name  string
-	isRef bool
-	ref   string
-	bean  *bean
+	pros  []*property
 }
 
 type scope string
@@ -50,6 +45,7 @@ func Bean(id string, type_ reflect.Type) *bean {
 		id:    id,
 		type_: type_,
 		scope: singleton,
+		pros:  make([]*property, 0),
 	}
 }
 
@@ -63,10 +59,31 @@ func (b *bean) Prototype() *bean {
 	return b
 }
 
+func (b *bean) With(p ...*property) *bean {
+	b.pros = append(b.pros, p...)
+	return b
+}
+
+type propertyType string
+
+const (
+	pValue     propertyType = "value"
+	pReference propertyType = "reference"
+	pBean      propertyType = "bean"
+)
+
+type property struct {
+	name  string
+	type_ propertyType
+	ref   string
+	bean  *bean
+	value string
+}
+
 func Ref(name, ref string) *property {
 	return &property{
 		name:  name,
-		isRef: true,
+		type_: pReference,
 		ref:   ref,
 	}
 }
@@ -74,8 +91,16 @@ func Ref(name, ref string) *property {
 func PropertyBean(name string, b *bean) *property {
 	return &property{
 		name:  name,
-		isRef: false,
+		type_: pBean,
 		bean:  b,
+	}
+}
+
+func Value(name string, v string) *property {
+	return &property{
+		name:  name,
+		type_: pValue,
+		value: v,
 	}
 }
 
@@ -147,5 +172,55 @@ func (ctx *applicationContext) GetSingleTonBean(bean *bean) (reflect.Value, erro
 }
 
 func (ctx *applicationContext) GetPrototypeBean(bean *bean) (reflect.Value, error) {
-	return reflect.New(bean.type_), nil
+
+	v := reflect.New(bean.type_)
+
+	for _, p := range bean.pros {
+
+		if _, present := bean.type_.FieldByName(p.name); !present {
+			return reflect.Value{}, fmt.Errorf("there is no member named [%v] in struct [%v]", p.name, bean.type_.Name())
+		}
+
+		field := v.Elem().FieldByName(p.name)
+
+		if !field.CanSet() {
+			return reflect.Value{}, fmt.Errorf("member named [%v] in struct [%v] is not setable", p.name, bean.type_.Name())
+		}
+
+		var e error
+		switch p.type_ {
+		case pValue:
+			e = ctx.setNativeField(field, p.value)
+		case pBean:
+			e = fmt.Errorf("TODO")
+		case pReference:
+			e = fmt.Errorf("TODO")
+		default:
+			return reflect.Value{}, fmt.Errorf("type of member named [%v] in struct [%v] is unknown", p.name, bean.type_.Name())
+		}
+
+		if e != nil {
+			return reflect.Value{}, e
+		}
+	}
+
+	return v, nil
+}
+
+func (ctx *applicationContext) setNativeField(field reflect.Value, value string) error {
+
+	switch field.Type().Kind() {
+	case reflect.String:
+		field.Set(reflect.ValueOf(value))
+	case reflect.Int:
+		i, e := strconv.ParseInt(value, 10, 32)
+		if e != nil {
+			return fmt.Errorf("[%v] can't convert to int. Caused by: %v", value, e)
+		}
+		field.Set(reflect.ValueOf(int(i)))
+	default:
+		return fmt.Errorf("Unsopport type %v", field.Type())
+	}
+
+	return nil
 }

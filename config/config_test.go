@@ -121,3 +121,71 @@ func (s *config_suite) Test_Config_GetBean_beanIsPrototype() {
 	// assert
 	assert.NotEqual(s.T(), unsafe.Pointer(s1), unsafe.Pointer(s2))
 }
+
+func (s *config_suite) Test_Config_GetBean_withIntPropertyInside() {
+
+	// arrange
+
+	type beanStruct struct{ I int } // with a int property
+	id := "iiiidddd"
+
+	config := Config(
+		Bean(id, reflect.TypeOf(beanStruct{})).Prototype().With(
+			Value("I", "123"),
+		),
+	)
+
+	// action
+
+	var e error
+	var ctx *applicationContext
+	var i interface{}
+	var bean *beanStruct
+	var ok bool
+
+	ctx, e = ApplicationContext(config)
+	assert.NoError(s.T(), e)
+
+	i, e = ctx.GetBean(id)
+	assert.NoError(s.T(), e)
+
+	bean, ok = i.(*beanStruct)
+	assert.True(s.T(), ok)
+
+	// assert
+	assert.Equal(s.T(), 123, bean.I)
+}
+
+func (s *config_suite) Test_Config_GetBean_withStringPropertyInside() {
+
+	// arrange
+
+	type beanStruct struct{ S string } // with string property
+	id := "iiiidddd"
+
+	config := Config(
+		Bean(id, reflect.TypeOf(beanStruct{})).Prototype().With(
+			Value("S", "a string property"),
+		),
+	)
+
+	// action
+
+	var e error
+	var ctx *applicationContext
+	var i interface{}
+	var bean *beanStruct
+	var ok bool
+
+	ctx, e = ApplicationContext(config)
+	assert.NoError(s.T(), e)
+
+	i, e = ctx.GetBean(id)
+	assert.NoError(s.T(), e)
+
+	bean, ok = i.(*beanStruct)
+	assert.True(s.T(), ok)
+
+	// assert
+	assert.Equal(s.T(), "a string property", bean.S)
+}

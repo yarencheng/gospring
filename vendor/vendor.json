@@ -69,6 +69,14 @@
 			"versionExact": "v1.2.1"
 		},
 		{
+			"checksumSHA1": "oNgNrI8Qr4y4+e+NAbq/Te5q6ZI=",
+			"path": "github.com/thoas/go-funk",
+			"revision": "14304e8530de7dbb909c8305591b3a8370dd9dbb",
+			"revisionTime": "2017-06-04T14:12:01Z",
+			"version": "0.2",
+			"versionExact": "0.2"
+		},
+		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
 			"path": "golang.org/x/crypto/ssh/terminal",
 			"revision": "b0697eccbea9adec5b7ba8008f4c33d98d733388",
