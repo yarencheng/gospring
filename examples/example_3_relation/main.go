@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/yarencheng/gospring/config"
+	"github.com/yarencheng/gospring"
 )
 
 func main() {
@@ -22,28 +22,28 @@ func main() {
 
 	fmt.Println("The order of beans defination dose not matter.")
 
-	beans := config.Beans(
+	beans := gospring.Beans(
 
-		config.Bean(ChildStruct1{}).
+		gospring.Bean(ChildStruct1{}).
 			Id("child1_id").
 			PropertyValue("MyValue", "it is child 1"),
 
-		config.Bean(ParentStruct{}).
+		gospring.Bean(ParentStruct{}).
 			Id("parent_id").
 			PropertyRef("Child1", "child1_id").
 			PropertyRef("Child1_p", "child1_id").
 			PropertyRef("Child2", "child2_id").
 			PropertyRef("Child2_p", "child2_id").
 			PropertyBean("Child3_local",
-				config.Bean(ChildStruct3{}).
+				gospring.Bean(ChildStruct3{}).
 					PropertyValue("MyValue", "it is child 3")),
 
-		config.Bean(ChildStruct2{}).
+		gospring.Bean(ChildStruct2{}).
 			Id("child2_id").
 			PropertyValue("MyValue", "it is child 2"),
 	)
 
-	ctx, _ := config.ApplicationContext(beans)
+	ctx, _ := gospring.ApplicationContext(beans)
 
 	parent, _ := ctx.GetBean("parent_id")
 

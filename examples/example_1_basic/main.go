@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yarencheng/gospring/config"
+	"github.com/yarencheng/gospring"
 )
 
 func main() {
@@ -19,8 +19,8 @@ func main() {
 		S string
 	}
 
-	beans := config.Beans(
-		config.Bean(MyStruct{}).
+	beans := gospring.Beans(
+		gospring.Bean(MyStruct{}).
 			Id("a unique of this bean").
 			PropertyValue("I", 12345).
 			PropertyValue("S", "a string value"),
@@ -30,7 +30,7 @@ func main() {
 	// Create a application contex
 	//
 
-	ctx, e1 := config.ApplicationContext(beans)
+	ctx, e1 := gospring.ApplicationContext(beans)
 
 	if e1 != nil {
 		fmt.Println("Create application context failed. Cuased by: ", e1)

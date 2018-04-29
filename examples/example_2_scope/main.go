@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/yarencheng/gospring/config"
+	"github.com/yarencheng/gospring"
 )
 
 func main() {
@@ -13,13 +13,13 @@ func main() {
 		MyValue string
 	}
 
-	beans := config.Beans(
-		config.Bean(MyStruct{}).Id("default_id").PropertyValue("MyValue", "AAA"),
-		config.Bean(MyStruct{}).Id("sigleton_id").Singleton().PropertyValue("MyValue", "BBB"),
-		config.Bean(MyStruct{}).Id("prototype_id").Prototype().PropertyValue("MyValue", "BBB"),
+	beans := gospring.Beans(
+		gospring.Bean(MyStruct{}).Id("default_id").PropertyValue("MyValue", "AAA"),
+		gospring.Bean(MyStruct{}).Id("sigleton_id").Singleton().PropertyValue("MyValue", "BBB"),
+		gospring.Bean(MyStruct{}).Id("prototype_id").Prototype().PropertyValue("MyValue", "BBB"),
 	)
 
-	ctx, _ := config.ApplicationContext(beans)
+	ctx, _ := gospring.ApplicationContext(beans)
 
 	{
 		//

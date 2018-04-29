@@ -16,8 +16,8 @@ Java Spring Framework is a famous IoC framework. This library try to imitate spr
 		S string
 	}
 
-	beans := config.Beans(
-		config.Bean(MyStruct{}).
+	beans := gospring.Beans(
+		gospring.Bean(MyStruct{}).
 			Id("a unique of this bean").
 			PropertyValue("I", 12345).
 			PropertyValue("S", "a string value"),
@@ -25,7 +25,7 @@ Java Spring Framework is a famous IoC framework. This library try to imitate spr
     ```
 2. Create a application contex
     ```go
-    ctx, e1 := config.ApplicationContext(beans)
+    ctx, e1 := gospring.ApplicationContext(beans)
     ```
 3. Use the context to get bean
     ```go
@@ -44,15 +44,15 @@ type MyStruct struct {
     MyValue string
 }
 
-beans := config.Beans(
-    config.Bean(MyStruct{}).
+beans := gospring.Beans(
+    gospring.Bean(MyStruct{}).
         Id("default_id").
         PropertyValue("MyValue", "AAA"),
-    config.Bean(MyStruct{}).
+    gospring.Bean(MyStruct{}).
         Id("sigleton_id").
         Singleton().
         PropertyValue("MyValue", "BBB"),
-    config.Bean(MyStruct{}).
+    gospring.Bean(MyStruct{}).
         Id("prototype_id").
         Prototype().
         PropertyValue("MyValue", "BBB"),
@@ -158,28 +158,28 @@ type ParentStruct struct {
 * A bean defined inside another bean called loacl bean.
 
 ```go
-beans := config.Beans(
+beans := gospring.Beans(
 
-    config.Bean(ChildStruct1{}).
+    gospring.Bean(ChildStruct1{}).
         Id("child1_id").
         PropertyValue("MyValue", "it is child 1"),
 
-    config.Bean(ParentStruct{}).
+    gospring.Bean(ParentStruct{}).
         Id("parent_id").
         PropertyRef("Child1", "child1_id").
         PropertyRef("Child1_p", "child1_id").
         PropertyRef("Child2", "child2_id").
         PropertyRef("Child2_p", "child2_id").
         PropertyBean("Child3_local",
-            config.Bean(ChildStruct3{}).
+            gospring.Bean(ChildStruct3{}).
                 PropertyValue("MyValue", "it is child 3")),
 
-    config.Bean(ChildStruct2{}).
+    gospring.Bean(ChildStruct2{}).
         Id("child2_id").
         PropertyValue("MyValue", "it is child 2"),
 )
 
-ctx, _ := config.ApplicationContext(beans)
+ctx, _ := gospring.ApplicationContext(beans)
 
 parent, _ := ctx.GetBean("parent_id")
 ```
