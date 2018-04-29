@@ -61,6 +61,7 @@ func Test_applicationContext_GetBean_defaultScope_struct(t *testing.T) {
 
 	assert.Equal(t, unsafe.Pointer(s1), unsafe.Pointer(s2))
 }
+
 func Test_applicationContext_GetBean_singleton_string(t *testing.T) {
 
 	// arrange

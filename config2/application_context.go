@@ -38,7 +38,9 @@ func (ctx *applicationContext) getBeanByIDRecursive(b *bean) {
 		if type_ != propertyTypeBean {
 			continue
 		}
-		ctx.getBeanByIDRecursive(b.pros[name].Interface().(*bean))
+		for _, pb := range b.pros[name] {
+			ctx.getBeanByIDRecursive(pb.Interface().(*bean))
+		}
 	}
 }
 
@@ -102,38 +104,51 @@ func (ctx *applicationContext) GetPrototypeBean(b *bean) (reflect.Value, error) 
 	for name, type_ := range b.prosType {
 
 		field := v.Elem().FieldByName(name)
-		var value reflect.Value
-		var valueError error
+		var values []reflect.Value
 
 		switch type_ {
 		case propertyTypeBean:
-			pb := b.pros[name].Interface().(*bean)
-			value, valueError = ctx.getBean(pb)
-			if valueError != nil {
-				return reflect.Value{}, fmt.Errorf("Get bean [%v] failed. Caused by: %v", *pb, valueError)
+			values = make([]reflect.Value, len(b.pros[name]))
+			for i, _ := range b.pros[name] {
+				pb := b.pros[name][i].Interface().(*bean)
+				vpb, vpbe := ctx.getBean(pb)
+				if vpbe != nil {
+					return reflect.Value{}, fmt.Errorf("Get bean [%v] failed. Caused by: %v", *pb, vpbe)
+				}
+				values[i] = vpb
 			}
 
 		case propertyTypeRef:
-			id := b.pros[name].Interface().(*refBean).ref
-			pb := ctx.beanById[id]
-			value, valueError = ctx.getBean(pb)
-			if valueError != nil {
-				return reflect.Value{}, fmt.Errorf("Get bean with ID [%v] failed. Caused by: %v", id, valueError)
+			values = make([]reflect.Value, len(b.pros[name]))
+			for i, _ := range b.pros[name] {
+				id := b.pros[name][i].Interface().(*refBean).ref
+				pb := ctx.beanById[id]
+				vpb, vpbe := ctx.getBean(pb)
+				if vpbe != nil {
+					return reflect.Value{}, fmt.Errorf("Get bean [%v] failed. Caused by: %v", *pb, vpbe)
+				}
+				values[i] = vpb
 			}
 
 		case propertyTypeValue:
-			value = reflect.New(b.pros[name].Type())
-			value.Elem().Set(b.pros[name])
+			values = make([]reflect.Value, len(b.pros[name]))
+			for i, _ := range b.pros[name] {
+				vt := reflect.New(b.pros[name][i].Type())
+				vt.Elem().Set(b.pros[name][i])
+				values[i] = vt
+			}
 
 		default:
 			return reflect.Value{}, fmt.Errorf("Type of property [%v] is unknown", type_)
 		}
 
 		switch field.Type().Kind() {
+		case reflect.Slice:
+			return reflect.Value{}, fmt.Errorf("TODO")
 		case reflect.Ptr:
-			field.Set(value)
+			field.Set(values[0])
 		default:
-			field.Set(value.Elem())
+			field.Set(values[0].Elem())
 		}
 	}
 

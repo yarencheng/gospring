@@ -31,7 +31,7 @@ type bean struct {
 	factoryFn     *reflect.Value
 	factoryFnArgv []reflect.Value
 	scope         scope
-	pros          map[string]reflect.Value
+	pros          map[string][]reflect.Value
 	prosType      map[string]propertyType
 }
 
@@ -51,7 +51,7 @@ func Bean(i interface{}) *bean {
 		factoryFn:     getDefaultFactoryFn(reflect.TypeOf(i)),
 		factoryFnArgv: make([]reflect.Value, 0),
 		scope:         scopeDefault,
-		pros:          make(map[string]reflect.Value),
+		pros:          make(map[string][]reflect.Value),
 		prosType:      make(map[string]propertyType),
 	}
 }
@@ -83,22 +83,40 @@ func (b *bean) Prototype() *bean {
 	return b
 }
 
-func (b *bean) PropertyValue(name string, v interface{}) *bean {
-	b.pros[name] = reflect.ValueOf(v)
+func (b *bean) PropertyValue(name string, vs ...interface{}) *bean {
+
+	rvs := make([]reflect.Value, len(vs))
+	for i, v := range vs {
+		rvs[i] = reflect.ValueOf(v)
+	}
+
+	b.pros[name] = rvs
 	b.prosType[name] = propertyTypeValue
 	return b
 }
 
-func (b *bean) PropertyBean(name string, bean *bean) *bean {
-	b.pros[name] = reflect.ValueOf(bean)
+func (b *bean) PropertyBean(name string, beans ...*bean) *bean {
+
+	rvs := make([]reflect.Value, len(beans))
+	for i, bean := range beans {
+		rvs[i] = reflect.ValueOf(bean)
+	}
+
+	b.pros[name] = rvs
 	b.prosType[name] = propertyTypeBean
 	return b
 }
 
-func (b *bean) PropertyRef(name string, ref string) *bean {
-	b.pros[name] = reflect.ValueOf(&refBean{
-		ref: ref,
-	})
+func (b *bean) PropertyRef(name string, refs ...string) *bean {
+
+	rvs := make([]reflect.Value, len(refs))
+	for i, ref := range refs {
+		rvs[i] = reflect.ValueOf(&refBean{
+			ref: ref,
+		})
+	}
+
+	b.pros[name] = rvs
 	b.prosType[name] = propertyTypeRef
 	return b
 }
