@@ -62,17 +62,17 @@ func (ctx *applicationContext) getBean(bean *bean) (reflect.Value, error) {
 
 	switch bean.scope {
 	case scopeDefault:
-		return ctx.GetSingleTonBean(bean)
+		return ctx.getSingleTonBean(bean)
 	case scopeSingleton:
-		return ctx.GetSingleTonBean(bean)
+		return ctx.getSingleTonBean(bean)
 	case scopePrototype:
-		return ctx.GetPrototypeBean(bean)
+		return ctx.getPrototypeBean(bean)
 	default:
 		return reflect.Value{}, fmt.Errorf("unsupport scope [%v]", bean.scope)
 	}
 }
 
-func (ctx *applicationContext) GetSingleTonBean(bean *bean) (reflect.Value, error) {
+func (ctx *applicationContext) getSingleTonBean(bean *bean) (reflect.Value, error) {
 
 	if bean.id != nil {
 		if v, present := ctx.singletonById[*bean.id]; present {
@@ -80,7 +80,7 @@ func (ctx *applicationContext) GetSingleTonBean(bean *bean) (reflect.Value, erro
 		}
 	}
 
-	v, e := ctx.GetPrototypeBean(bean)
+	v, e := ctx.getPrototypeBean(bean)
 	if e != nil {
 		return reflect.Value{}, fmt.Errorf("Can't create bean [%v]. Cuased by: %v", *bean.id, e)
 	}
@@ -92,7 +92,7 @@ func (ctx *applicationContext) GetSingleTonBean(bean *bean) (reflect.Value, erro
 	return v, nil
 }
 
-func (ctx *applicationContext) GetPrototypeBean(b *bean) (reflect.Value, error) {
+func (ctx *applicationContext) getPrototypeBean(b *bean) (reflect.Value, error) {
 
 	i, e := b.new()
 	if e != nil {
