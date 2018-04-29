@@ -185,14 +185,7 @@ func (ctx *applicationContext) execBeanInit(value reflect.Value, bean *bean) err
 		return nil
 	}
 
-	var argv []reflect.Value
-	if initFn.Type().NumIn() == 1 {
-		argv = []reflect.Value{value}
-	} else {
-		argv = []reflect.Value{}
-	}
-
-	rv := initFn.Call(argv)
+	rv := initFn.Call([]reflect.Value{value})
 	switch len(rv) {
 	case 0:
 		return nil
@@ -225,18 +218,17 @@ func (ctx *applicationContext) findInitFn(value reflect.Value, bean *bean) *refl
 
 	switch value.Type().Kind() {
 	case reflect.Ptr:
-		if _, ok := value.Type().MethodByName("Init"); !ok {
-			return nil
-		}
 	default:
 		return nil
 	}
 
-	field := value.MethodByName("Init")
+	method, ok := value.Type().MethodByName("Init")
+	if !ok {
+		return nil
+	}
 
-	if field.Type().NumIn() == 0 {
-		a := &field
-		return a
+	if method.Func.Type().NumIn() == 1 {
+		return &(method.Func)
 	}
 
 	return nil
