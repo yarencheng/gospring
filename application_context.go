@@ -262,22 +262,17 @@ func (ctx *applicationContext) findFinalizeFn(value reflect.Value, bean *bean) *
 
 	switch value.Type().Kind() {
 	case reflect.Ptr:
-		if _, ok := value.Type().MethodByName("Finalize"); !ok {
-			return nil
-		}
 	default:
 		return nil
 	}
 
-	field := value.MethodByName("Finalize")
+	method, ok := value.Type().MethodByName("Finalize")
+	if !ok {
+		return nil
+	}
 
-	if field.Type().NumIn() == 0 {
-
-		wrapper := func(ponter interface{}) []reflect.Value {
-			return field.Call([]reflect.Value{})
-		}
-		wrapperV := reflect.ValueOf(wrapper)
-		return &wrapperV
+	if method.Func.Type().NumIn() == 1 {
+		return &(method.Func)
 	}
 
 	return nil
