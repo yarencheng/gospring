@@ -33,6 +33,8 @@ type bean struct {
 	scope         scope
 	pros          map[string][]reflect.Value
 	prosType      map[string]propertyType
+	initFn        *reflect.Value
+	finalizeFn    *reflect.Value
 }
 
 type beans struct {
@@ -118,6 +120,18 @@ func (b *bean) PropertyRef(name string, refs ...string) *bean {
 
 	b.pros[name] = rvs
 	b.prosType[name] = propertyTypeRef
+	return b
+}
+
+func (b *bean) Init(fn interface{}) *bean {
+	fnv := reflect.ValueOf(fn)
+	b.initFn = &fnv
+	return b
+}
+
+func (b *bean) Finalize(fn interface{}) *bean {
+	fnv := reflect.ValueOf(fn)
+	b.finalizeFn = &fnv
 	return b
 }
 
