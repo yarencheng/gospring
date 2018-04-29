@@ -419,3 +419,26 @@ func Test_applicationContext_GetBean_withCostumeInitFn_andReturnOtherValue(t *te
 	assert.True(t, isCall)
 	assert.NotNil(t, e)
 }
+
+type beanStruct struct{ S string }
+
+func (b *beanStruct) Init() {
+	b.S = "called"
+}
+
+func Test_applicationContext_GetBean_withStructInitFn(t *testing.T) {
+
+	// arrange
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct{}).Id("Bean1"),
+	))
+
+	// action
+	b, e := ctx.GetBean("Bean1")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	assert.Equal(t, "called", b.(*beanStruct).S)
+}

@@ -172,36 +172,67 @@ func (ctx *applicationContext) getPrototypeBean(b *bean) (reflect.Value, error) 
 	return v, nil
 }
 
-func (ctx *applicationContext) execBeanInit(value reflect.Value, bena *bean) error {
-	if bena.initFn != nil {
-		rv := bena.initFn.Call([]reflect.Value{value})
-		switch len(rv) {
-		case 0:
-			return nil
-		case 1:
-			if e, ok := rv[0].Interface().(error); ok {
-				return fmt.Errorf(
-					"init bean [%v] failed. Caused by: %v",
-					*bena,
-					e,
-				)
-			} else {
-				return fmt.Errorf(
-					"init function of bean [%v] returns 1 unexpected value",
-					*bena,
-				)
-			}
-		default:
-			return fmt.Errorf(
-				"init function of bean [%v] returns %d unexpected values",
-				*bena,
-				len(rv),
-			)
-		}
+func (ctx *applicationContext) execBeanInit(value reflect.Value, bean *bean) error {
+
+	initFn := ctx.fincInitFn(value, bean)
+
+	if initFn == nil {
+		return nil
 	}
 
-	// try to find A.Init(a* A) function in struct
-	// TODO
+	var argv []reflect.Value
+	if initFn.Type().NumIn() == 1 {
+		argv = []reflect.Value{value}
+	} else {
+		argv = []reflect.Value{}
+	}
+
+	rv := initFn.Call(argv)
+	switch len(rv) {
+	case 0:
+		return nil
+	case 1:
+		if e, ok := rv[0].Interface().(error); ok {
+			return fmt.Errorf(
+				"init bean [%v] failed. Caused by: %v",
+				*bean,
+				e,
+			)
+		} else {
+			return fmt.Errorf(
+				"init function of bean [%v] returns 1 unexpected value",
+				*bean,
+			)
+		}
+	default:
+		return fmt.Errorf(
+			"init function of bean [%v] returns %d unexpected values",
+			*bean,
+			len(rv),
+		)
+	}
+}
+
+func (ctx *applicationContext) fincInitFn(value reflect.Value, bean *bean) *reflect.Value {
+	if bean.initFn != nil {
+		return bean.initFn
+	}
+
+	switch value.Type().Kind() {
+	case reflect.Ptr:
+		if _, ok := value.Type().MethodByName("Init"); !ok {
+			return nil
+		}
+	default:
+		return nil
+	}
+
+	field := value.MethodByName("Init")
+
+	if field.Type().NumIn() == 0 {
+		a := &field
+		return a
+	}
 
 	return nil
 }
