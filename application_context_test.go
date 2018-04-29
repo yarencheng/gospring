@@ -7,6 +7,7 @@ import (
 	"unsafe"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_applicationContext_GetBean_defaultScope_string(t *testing.T) {
@@ -444,27 +445,48 @@ func Test_applicationContext_GetBean_withStructInitFn(t *testing.T) {
 	assert.Equal(t, "called", b.(*beanStruct_g1).S)
 }
 
-type beanStruct_g2 struct{ S string }
-
-func (b *beanStruct_g2) Init() {
-	b.S = "called"
-}
-
 func Test_applicationContext_GetBean_withCostumeFinalizeFn(t *testing.T) {
 
 	// arrange
 	type beanStruct struct{ S string }
+	isCall := false
 	ctx, _ := ApplicationContext(Beans(
-		Bean(beanStruct_g2{}).Id("Bean1"),
+		Bean(beanStruct{}).Id("Bean1").Finalize(func(*beanStruct) {
+			isCall = true
+		}),
 	))
 
 	// action
-	b, e := ctx.GetBean("Bean1")
+	_, e := ctx.GetBean("Bean1")
 	if e != nil {
 		assert.FailNow(t, e.Error())
 	}
 
 	// aasert
 	runtime.GC()
-	assert.Equal(t, "called", b.(*beanStruct_g2).S)
+	assert.True(t, isCall)
+}
+
+type beanStruct_g2 struct{ S string }
+
+func (b *beanStruct_g2) Finalize() {
+	Test_applicationContext_GetBean_withStructFinalizeFn_isCalled = true
+}
+
+var Test_applicationContext_GetBean_withStructFinalizeFn_isCalled = false
+
+func Test_applicationContext_GetBean_withStructFinalizeFn(t *testing.T) {
+
+	// arrange
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct_g2{}).Id("Bean1"),
+	))
+
+	// action
+	_, e := ctx.GetBean("Bean1")
+	require.Nil(t, e)
+
+	// aasert
+	runtime.GC()
+	assert.True(t, Test_applicationContext_GetBean_withStructFinalizeFn_isCalled)
 }
