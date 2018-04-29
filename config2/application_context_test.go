@@ -310,6 +310,54 @@ func Test_applicationContext_GetBean_withValueProperty_andIsNotPointer(t *testin
 	assert.Equal(t, "ss", s.S)
 }
 
+func Test_applicationContext_GetBean_withValueProperty_andIsSliceOfString(t *testing.T) {
+
+	// arrange
+	type beanStruct struct{ S []string }
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct{}).Id("Bean1").PropertyValue("S", "AAA", "BBB"),
+	))
+
+	// action
+	bean, e := ctx.GetBean("Bean1")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	s, ok := bean.(*beanStruct)
+	assert.True(t, ok)
+
+	assert.Equal(t, beanStruct{
+		S: []string{"AAA", "BBB"},
+	}, *s)
+}
+
+func Test_applicationContext_GetBean_withValueProperty_andIsSliceOfStringPointer(t *testing.T) {
+
+	// arrange
+	type beanStruct struct{ S []*string }
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct{}).Id("Bean1").PropertyValue("S", "AAA", "BBB"),
+	))
+
+	// action
+	bean, e := ctx.GetBean("Bean1")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	s, ok := bean.(*beanStruct)
+	assert.True(t, ok)
+
+	aaa := "AAA"
+	bbb := "BBB"
+	assert.Equal(t, beanStruct{
+		S: []*string{&aaa, &bbb},
+	}, *s)
+}
+
 func Test_applicationContext_demo(t *testing.T) {
 
 	// arrange

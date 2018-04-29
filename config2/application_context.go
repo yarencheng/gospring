@@ -144,7 +144,20 @@ func (ctx *applicationContext) GetPrototypeBean(b *bean) (reflect.Value, error) 
 
 		switch field.Type().Kind() {
 		case reflect.Slice:
-			return reflect.Value{}, fmt.Errorf("TODO")
+			slice := reflect.MakeSlice(field.Type(), len(values), len(values))
+
+			switch field.Type().Elem().Kind() {
+			case reflect.Ptr:
+				for i, value := range values {
+					slice.Index(i).Set(value)
+				}
+			default:
+				for i, value := range values {
+					slice.Index(i).Set(value.Elem())
+				}
+			}
+
+			field.Set(slice)
 		case reflect.Ptr:
 			field.Set(values[0])
 		default:
