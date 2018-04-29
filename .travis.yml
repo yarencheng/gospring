@@ -8,6 +8,9 @@ install:
   - govendor sync
 
 script:
-  - govendor test +local
+  - govendor test +local -v -covermode=count -coverprofile=coverage.out
   - govendor install +local
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
   
