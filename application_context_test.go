@@ -1,6 +1,7 @@
 package gospring
 
 import (
+	"fmt"
 	"testing"
 	"unsafe"
 
@@ -358,84 +359,63 @@ func Test_applicationContext_GetBean_withValueProperty_andIsSliceOfStringPointer
 	}, *s)
 }
 
-func Test_applicationContext_demo(t *testing.T) {
+func Test_applicationContext_GetBean_withCostumeInitFn(t *testing.T) {
 
 	// arrange
-
-	type Bean2 struct {
-		Value string
-	}
-	type Bean1 struct {
-		Ivalue   int
-		Svalue   string
-		IPointer *int
-		SPointer *string
-		Bvalue   Bean2
-		BPointer *Bean2
-		Blocal   *Bean2
-	}
+	type beanStruct struct{ S string }
+	isCall := false
 	ctx, _ := ApplicationContext(Beans(
-		Bean(Bean1{}).Id("id_b"),
-		Bean(Bean1{}).Id("id_c").Prototype(),
-		Bean(Bean1{}).Id("id_d").Singleton(),
-		Bean(Bean1{}).Id("id_e").PropertyValue("Ivalue", 123),
-		Bean(Bean1{}).Id("id_f").PropertyValue("Svalue", "hi spring"),
-		Bean(Bean1{}).Id("id_g").PropertyValue("IPointer", 123),
-		Bean(Bean1{}).Id("id_h").PropertyValue("SPointer", "hi spring"),
-		Bean(Bean1{}).Id("id_i").PropertyRef("Bvalue", "id_a"),
-		Bean(Bean1{}).Id("id_j").PropertyRef("BPointer", "id_a"),
-		Bean(Bean1{}).Id("id_k").PropertyBean(
-			"Blocal", Bean(Bean2{}).PropertyValue("Value", "is a local bean without ID"),
-		),
-		Bean(Bean2{}).Id("id").PropertyValue("Value", "bean2 foo"),
-		Bean(Bean2{}).Id("id_a"),
+		Bean(beanStruct{}).Id("Bean1").Init(func(*beanStruct) {
+			isCall = true
+		}),
 	))
 
-	var bean interface{}
-	var beanA interface{}
-	var beanB interface{}
-	var i int
-	var s string
+	// action
+	_, e := ctx.GetBean("Bean1")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
 
-	bean, _ = ctx.GetBean("id")
-	assert.Equal(t, Bean2{Value: "bean2 foo"}, *bean.(*Bean2))
+	// aasert
+	assert.True(t, isCall)
+}
 
-	bean, _ = ctx.GetBean("id_a")
-	assert.Equal(t, Bean2{}, *bean.(*Bean2))
+func Test_applicationContext_GetBean_withCostumeInitFn_andReturnError(t *testing.T) {
 
-	bean, _ = ctx.GetBean("id_b")
-	assert.Equal(t, Bean1{}, *bean.(*Bean1))
+	// arrange
+	type beanStruct struct{ S string }
+	isCall := false
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct{}).Id("Bean1").Init(func(*beanStruct) error {
+			isCall = true
+			return fmt.Errorf("")
+		}),
+	))
 
-	beanA, _ = ctx.GetBean("id_c")
-	beanB, _ = ctx.GetBean("id_c")
-	assert.NotEqual(t, unsafe.Pointer(beanA.(*Bean1)), unsafe.Pointer(beanB.(*Bean1)))
+	// action
+	_, e := ctx.GetBean("Bean1")
 
-	beanA, _ = ctx.GetBean("id_d")
-	beanB, _ = ctx.GetBean("id_d")
-	assert.Equal(t, unsafe.Pointer(beanA.(*Bean1)), unsafe.Pointer(beanB.(*Bean1)))
+	// aasert
+	assert.True(t, isCall)
+	assert.NotNil(t, e)
+}
 
-	bean, _ = ctx.GetBean("id_e")
-	assert.Equal(t, Bean1{Ivalue: 123}, *bean.(*Bean1))
+func Test_applicationContext_GetBean_withCostumeInitFn_andReturnOtherValue(t *testing.T) {
 
-	bean, _ = ctx.GetBean("id_f")
-	assert.Equal(t, Bean1{Svalue: "hi spring"}, *bean.(*Bean1))
+	// arrange
+	type beanStruct struct{ S string }
+	isCall := false
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct{}).Id("Bean1").Init(func(*beanStruct) (int, int) {
+			isCall = true
+			return 123, 123
+		}),
+	))
 
-	bean, _ = ctx.GetBean("id_g")
-	i = 123
-	assert.Equal(t, Bean1{IPointer: &i}, *bean.(*Bean1))
+	// action
+	_, e := ctx.GetBean("Bean1")
 
-	bean, _ = ctx.GetBean("id_h")
-	s = "hi spring"
-	assert.Equal(t, Bean1{SPointer: &s}, *bean.(*Bean1))
-
-	bean, _ = ctx.GetBean("id_i")
-	assert.Equal(t, Bean1{Bvalue: Bean2{}}, *bean.(*Bean1))
-
-	bean, _ = ctx.GetBean("id_j")
-	assert.Equal(t, Bean1{BPointer: &Bean2{}}, *bean.(*Bean1))
-
-	bean, _ = ctx.GetBean("id_k")
-	assert.Equal(t, Bean1{Blocal: &Bean2{
-		Value: "is a local bean without ID",
-	}}, *bean.(*Bean1))
+	// aasert
+	assert.True(t, isCall)
+	assert.NotNil(t, e)
 }

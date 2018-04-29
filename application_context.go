@@ -165,5 +165,43 @@ func (ctx *applicationContext) getPrototypeBean(b *bean) (reflect.Value, error) 
 		}
 	}
 
+	if e := ctx.execBeanInit(v, b); e != nil {
+		return reflect.Value{}, fmt.Errorf("Initialize bean [%v] failed. Caused by: %v", *b, e)
+	}
+
 	return v, nil
+}
+
+func (ctx *applicationContext) execBeanInit(value reflect.Value, bena *bean) error {
+	if bena.initFn != nil {
+		rv := bena.initFn.Call([]reflect.Value{value})
+		switch len(rv) {
+		case 0:
+			return nil
+		case 1:
+			if e, ok := rv[0].Interface().(error); ok {
+				return fmt.Errorf(
+					"init bean [%v] failed. Caused by: %v",
+					*bena,
+					e,
+				)
+			} else {
+				return fmt.Errorf(
+					"init function of bean [%v] returns 1 unexpected value",
+					*bena,
+				)
+			}
+		default:
+			return fmt.Errorf(
+				"init function of bean [%v] returns %d unexpected values",
+				*bena,
+				len(rv),
+			)
+		}
+	}
+
+	// try to find A.Init(a* A) function in struct
+	// TODO
+
+	return nil
 }
