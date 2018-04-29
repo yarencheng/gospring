@@ -3,6 +3,7 @@ package gospring
 import (
 	"fmt"
 	"reflect"
+	"runtime"
 )
 
 type applicationContext struct {
@@ -169,12 +170,16 @@ func (ctx *applicationContext) getPrototypeBean(b *bean) (reflect.Value, error) 
 		return reflect.Value{}, fmt.Errorf("Initialize bean [%v] failed. Caused by: %v", *b, e)
 	}
 
+	if e := ctx.setBeanRuntimeFinalizer(v, b); e != nil {
+		return reflect.Value{}, fmt.Errorf("Set finalizer for bean [%v] failed. Caused by: %v", *b, e)
+	}
+
 	return v, nil
 }
 
 func (ctx *applicationContext) execBeanInit(value reflect.Value, bean *bean) error {
 
-	initFn := ctx.fincInitFn(value, bean)
+	initFn := ctx.findInitFn(value, bean)
 
 	if initFn == nil {
 		return nil
@@ -213,7 +218,7 @@ func (ctx *applicationContext) execBeanInit(value reflect.Value, bean *bean) err
 	}
 }
 
-func (ctx *applicationContext) fincInitFn(value reflect.Value, bean *bean) *reflect.Value {
+func (ctx *applicationContext) findInitFn(value reflect.Value, bean *bean) *reflect.Value {
 	if bean.initFn != nil {
 		return bean.initFn
 	}
@@ -228,6 +233,43 @@ func (ctx *applicationContext) fincInitFn(value reflect.Value, bean *bean) *refl
 	}
 
 	field := value.MethodByName("Init")
+
+	if field.Type().NumIn() == 0 {
+		a := &field
+		return a
+	}
+
+	return nil
+}
+
+func (ctx *applicationContext) setBeanRuntimeFinalizer(value reflect.Value, bean *bean) error {
+
+	finalFn := ctx.findFinalizeFn(value, bean)
+
+	if finalFn == nil {
+		return nil
+	}
+
+	runtime.SetFinalizer(value.Interface(), finalFn.Interface())
+
+	return nil
+}
+
+func (ctx *applicationContext) findFinalizeFn(value reflect.Value, bean *bean) *reflect.Value {
+	if bean.finalizeFn != nil {
+		return bean.finalizeFn
+	}
+
+	switch value.Type().Kind() {
+	case reflect.Ptr:
+		if _, ok := value.Type().MethodByName("Finalize"); !ok {
+			return nil
+		}
+	default:
+		return nil
+	}
+
+	field := value.MethodByName("Finalize")
 
 	if field.Type().NumIn() == 0 {
 		a := &field

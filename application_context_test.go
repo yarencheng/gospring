@@ -2,6 +2,7 @@ package gospring
 
 import (
 	"fmt"
+	"runtime"
 	"testing"
 	"unsafe"
 
@@ -420,9 +421,9 @@ func Test_applicationContext_GetBean_withCostumeInitFn_andReturnOtherValue(t *te
 	assert.NotNil(t, e)
 }
 
-type beanStruct struct{ S string }
+type beanStruct_g1 struct{ S string }
 
-func (b *beanStruct) Init() {
+func (b *beanStruct_g1) Init() {
 	b.S = "called"
 }
 
@@ -430,7 +431,7 @@ func Test_applicationContext_GetBean_withStructInitFn(t *testing.T) {
 
 	// arrange
 	ctx, _ := ApplicationContext(Beans(
-		Bean(beanStruct{}).Id("Bean1"),
+		Bean(beanStruct_g1{}).Id("Bean1"),
 	))
 
 	// action
@@ -440,5 +441,30 @@ func Test_applicationContext_GetBean_withStructInitFn(t *testing.T) {
 	}
 
 	// aasert
-	assert.Equal(t, "called", b.(*beanStruct).S)
+	assert.Equal(t, "called", b.(*beanStruct_g1).S)
+}
+
+type beanStruct_g2 struct{ S string }
+
+func (b *beanStruct_g2) Init() {
+	b.S = "called"
+}
+
+func Test_applicationContext_GetBean_withCostumeFinalizeFn(t *testing.T) {
+
+	// arrange
+	type beanStruct struct{ S string }
+	ctx, _ := ApplicationContext(Beans(
+		Bean(beanStruct_g2{}).Id("Bean1"),
+	))
+
+	// action
+	b, e := ctx.GetBean("Bean1")
+	if e != nil {
+		assert.FailNow(t, e.Error())
+	}
+
+	// aasert
+	runtime.GC()
+	assert.Equal(t, "called", b.(*beanStruct_g2).S)
 }
