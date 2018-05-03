@@ -12,7 +12,7 @@ func (bean *referenceBean) Finalize(fnName string) BeanI {
 	return bean
 }
 
-func (bean *referenceBean) Id(id string) BeanI {
+func (bean *referenceBean) ID(id string) BeanI {
 	return bean
 }
 
@@ -27,15 +27,19 @@ func (bean *referenceBean) Property(name string, values ...interface{}) BeanI {
 func (bean *referenceBean) GetFactory() interface{} {
 	return nil
 }
+
 func (bean *referenceBean) GetFactoryArgv() []interface{} {
 	return nil
 }
-func (bean *referenceBean) GetId() *string {
+
+func (bean *referenceBean) GetID() *string {
 	return &bean.targetId
 }
+
 func (bean *referenceBean) GetInit() *string {
 	return nil
 }
+
 func (bean *referenceBean) GetProperty(name string) []interface{} {
 	return nil
 }
