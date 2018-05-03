@@ -154,39 +154,3 @@ func Test_bean_Prototype(t *testing.T) {
 	// assert
 	assert.Equal(t, scopePrototype, b.scope)
 }
-
-func Test_bean_Init(t *testing.T) {
-	// arrange
-	isCall := false
-	b := Bean("").Init(func(s *string) {
-		isCall = true
-	})
-
-	// action
-	s := ""
-	argv := []reflect.Value{
-		reflect.ValueOf(&s),
-	}
-	b.initFn.Call(argv)
-
-	// assert
-	assert.True(t, isCall)
-}
-
-func Test_bean_Finalize(t *testing.T) {
-	// arrange
-	isCall := false
-	b := Bean("").Finalize(func(s *string) {
-		isCall = true
-	})
-
-	// action
-	s := ""
-	argv := []reflect.Value{
-		reflect.ValueOf(&s),
-	}
-	b.finalizeFn.Call(argv)
-
-	// assert
-	assert.True(t, isCall)
-}

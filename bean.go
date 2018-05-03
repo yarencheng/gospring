@@ -26,15 +26,15 @@ const (
 )
 
 type bean struct {
-	type_         reflect.Type
-	id            *string
-	factoryFn     *reflect.Value
-	factoryFnArgv []reflect.Value
-	scope         scope
-	pros          map[string][]reflect.Value
-	prosType      map[string]propertyType
-	initFn        *reflect.Value
-	finalizeFn    *reflect.Value
+	type_          reflect.Type
+	id             *string
+	factoryFn      *reflect.Value
+	factoryFnArgv  []reflect.Value
+	scope          scope
+	pros           map[string][]reflect.Value
+	prosType       map[string]propertyType
+	initFnName     string
+	finalizeFnName string
 }
 
 type beans struct {
@@ -49,12 +49,14 @@ func Beans(bs ...*bean) *beans {
 
 func Bean(i interface{}) *bean {
 	return &bean{
-		type_:         reflect.TypeOf(i),
-		factoryFn:     getDefaultFactoryFn(reflect.TypeOf(i)),
-		factoryFnArgv: make([]reflect.Value, 0),
-		scope:         scopeDefault,
-		pros:          make(map[string][]reflect.Value),
-		prosType:      make(map[string]propertyType),
+		type_:          reflect.TypeOf(i),
+		factoryFn:      getDefaultFactoryFn(reflect.TypeOf(i)),
+		factoryFnArgv:  make([]reflect.Value, 0),
+		scope:          scopeDefault,
+		pros:           make(map[string][]reflect.Value),
+		prosType:       make(map[string]propertyType),
+		initFnName:     "Init",
+		finalizeFnName: "Finalize",
 	}
 }
 
@@ -123,15 +125,13 @@ func (b *bean) PropertyRef(name string, refs ...string) *bean {
 	return b
 }
 
-func (b *bean) Init(fn interface{}) *bean {
-	fnv := reflect.ValueOf(fn)
-	b.initFn = &fnv
+func (b *bean) Init(fn string) *bean {
+	b.initFnName = fn
 	return b
 }
 
-func (b *bean) Finalize(fn interface{}) *bean {
-	fnv := reflect.ValueOf(fn)
-	b.finalizeFn = &fnv
+func (b *bean) Finalize(fn string) *bean {
+	b.finalizeFnName = fn
 	return b
 }
 

@@ -361,110 +361,98 @@ func Test_applicationContext_GetBean_withValueProperty_andIsSliceOfStringPointer
 	}, *s)
 }
 
+type Test_applicationContext_GetBean_withCostumeInitFn_struct struct{ S string }
+
+var Test_applicationContext_GetBean_withCostumeInitFn_isRun = false
+
+func (*Test_applicationContext_GetBean_withCostumeInitFn_struct) Test_applicationContext_GetBean_withCostumeInitFn_fn() {
+	Test_applicationContext_GetBean_withCostumeInitFn_isRun = true
+}
+
 func Test_applicationContext_GetBean_withCostumeInitFn(t *testing.T) {
 
 	// arrange
-	type beanStruct struct{ S string }
-	isCall := false
 	ctx, _ := ApplicationContext(Beans(
-		Bean(beanStruct{}).Id("Bean1").Init(func(*beanStruct) {
-			isCall = true
-		}),
+		Bean(Test_applicationContext_GetBean_withCostumeInitFn_struct{}).Id("Bean1").Init("Test_applicationContext_GetBean_withCostumeInitFn_fn"),
 	))
 
 	// action
 	_, e := ctx.GetBean("Bean1")
-	if e != nil {
-		assert.FailNow(t, e.Error())
-	}
+	require.Nil(t, e)
 
 	// aasert
-	assert.True(t, isCall)
+	assert.True(t, Test_applicationContext_GetBean_withCostumeInitFn_isRun)
+}
+
+type Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_struct struct{ S string }
+
+var Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_isRun = false
+
+func (*Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_struct) Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_fn() error {
+	Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_isRun = true
+	return fmt.Errorf("")
 }
 
 func Test_applicationContext_GetBean_withCostumeInitFn_andReturnError(t *testing.T) {
 
 	// arrange
-	type beanStruct struct{ S string }
-	isCall := false
 	ctx, _ := ApplicationContext(Beans(
-		Bean(beanStruct{}).Id("Bean1").Init(func(*beanStruct) error {
-			isCall = true
-			return fmt.Errorf("")
-		}),
+		Bean(Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_struct{}).Id("Bean1").Init("Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_fn"),
 	))
 
 	// action
 	_, e := ctx.GetBean("Bean1")
+	require.NotNil(t, e)
 
 	// aasert
-	assert.True(t, isCall)
-	assert.NotNil(t, e)
+	assert.True(t, Test_applicationContext_GetBean_withCostumeInitFn_andReturnError_isRun)
 }
 
-func Test_applicationContext_GetBean_withCostumeInitFn_andReturnOtherValue(t *testing.T) {
+type Test_applicationContext_GetBean_withStructInitFn_struct struct{ S string }
 
-	// arrange
-	type beanStruct struct{ S string }
-	isCall := false
-	ctx, _ := ApplicationContext(Beans(
-		Bean(beanStruct{}).Id("Bean1").Init(func(*beanStruct) (int, int) {
-			isCall = true
-			return 123, 123
-		}),
-	))
+var Test_applicationContext_GetBean_withStructInitFn_isRun = false
 
-	// action
-	_, e := ctx.GetBean("Bean1")
-
-	// aasert
-	assert.True(t, isCall)
-	assert.NotNil(t, e)
-}
-
-type beanStruct_g1 struct{ S string }
-
-func (b *beanStruct_g1) Init() {
-	b.S = "called"
+func (b *Test_applicationContext_GetBean_withStructInitFn_struct) Init() {
+	Test_applicationContext_GetBean_withStructInitFn_isRun = true
 }
 
 func Test_applicationContext_GetBean_withStructInitFn(t *testing.T) {
 
 	// arrange
 	ctx, _ := ApplicationContext(Beans(
-		Bean(beanStruct_g1{}).Id("Bean1"),
+		Bean(Test_applicationContext_GetBean_withStructInitFn_struct{}).Id("Bean1"),
 	))
 
 	// action
-	b, e := ctx.GetBean("Bean1")
-	if e != nil {
-		assert.FailNow(t, e.Error())
-	}
+	_, e := ctx.GetBean("Bean1")
+	require.Nil(t, e)
 
 	// aasert
-	assert.Equal(t, "called", b.(*beanStruct_g1).S)
+	assert.True(t, Test_applicationContext_GetBean_withStructInitFn_isRun)
+}
+
+type Test_applicationContext_GetBean_withCostumeFinalizeFn_struct struct{ S string }
+
+var Test_applicationContext_GetBean_withCostumeFinalizeFn_isRun = false
+
+func (b *Test_applicationContext_GetBean_withCostumeFinalizeFn_struct) Aaa() {
+	Test_applicationContext_GetBean_withCostumeFinalizeFn_isRun = true
 }
 
 func Test_applicationContext_GetBean_withCostumeFinalizeFn(t *testing.T) {
 
 	// arrange
-	type beanStruct struct{ S string }
-	isCall := false
 	ctx, _ := ApplicationContext(Beans(
-		Bean(beanStruct{}).Id("Bean1").Finalize(func(*beanStruct) {
-			isCall = true
-		}),
+		Bean(Test_applicationContext_GetBean_withCostumeFinalizeFn_struct{}).Id("Bean1").Finalize("Aaa"),
 	))
 
 	// action
 	_, e := ctx.GetBean("Bean1")
-	if e != nil {
-		assert.FailNow(t, e.Error())
-	}
+	require.Nil(t, e)
+	ctx.Finalize()
 
 	// aasert
-	runtime.GC()
-	assert.True(t, isCall)
+	assert.True(t, Test_applicationContext_GetBean_withCostumeFinalizeFn_isRun)
 }
 
 type beanStruct_g2 struct{ S string }
@@ -485,6 +473,7 @@ func Test_applicationContext_GetBean_withStructFinalizeFn(t *testing.T) {
 	// action
 	_, e := ctx.GetBean("Bean1")
 	require.Nil(t, e)
+	ctx.Finalize()
 
 	// aasert
 	runtime.GC()

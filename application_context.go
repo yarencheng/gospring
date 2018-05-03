@@ -3,7 +3,6 @@ package gospring
 import (
 	"fmt"
 	"reflect"
-	"runtime"
 )
 
 type applicationContext struct {
@@ -27,6 +26,23 @@ func ApplicationContext(bs *beans) (*applicationContext, error) {
 	}
 
 	return ctx, nil
+}
+
+func (ctx *applicationContext) Finalize() error {
+
+	// TODO: finalize beans by the dependency order
+
+	for name, singleton := range ctx.singletonById {
+
+		bean := ctx.beanById[name]
+		e := ctx.execBeanFinalizer(singleton, bean)
+
+		if e != nil {
+			return fmt.Errorf("Finalize bean [%v] failed. Caused by: %v", bean, e)
+		}
+	}
+
+	return nil
 }
 
 func (ctx *applicationContext) getBeanByIDRecursive(b *bean) {
@@ -170,10 +186,6 @@ func (ctx *applicationContext) getPrototypeBean(b *bean) (reflect.Value, error) 
 		return reflect.Value{}, fmt.Errorf("Initialize bean [%v] failed. Caused by: %v", *b, e)
 	}
 
-	if e := ctx.setBeanRuntimeFinalizer(v, b); e != nil {
-		return reflect.Value{}, fmt.Errorf("Set finalizer for bean [%v] failed. Caused by: %v", *b, e)
-	}
-
 	return v, nil
 }
 
@@ -212,9 +224,6 @@ func (ctx *applicationContext) execBeanInit(value reflect.Value, bean *bean) err
 }
 
 func (ctx *applicationContext) findInitFn(value reflect.Value, bean *bean) *reflect.Value {
-	if bean.initFn != nil {
-		return bean.initFn
-	}
 
 	switch value.Type().Kind() {
 	case reflect.Ptr:
@@ -222,7 +231,7 @@ func (ctx *applicationContext) findInitFn(value reflect.Value, bean *bean) *refl
 		return nil
 	}
 
-	method, ok := value.Type().MethodByName("Init")
+	method, ok := value.Type().MethodByName(bean.initFnName)
 	if !ok {
 		return nil
 	}
@@ -234,7 +243,7 @@ func (ctx *applicationContext) findInitFn(value reflect.Value, bean *bean) *refl
 	return nil
 }
 
-func (ctx *applicationContext) setBeanRuntimeFinalizer(value reflect.Value, bean *bean) error {
+func (ctx *applicationContext) execBeanFinalizer(value reflect.Value, bean *bean) error {
 
 	finalFn := ctx.findFinalizeFn(value, bean)
 
@@ -242,15 +251,33 @@ func (ctx *applicationContext) setBeanRuntimeFinalizer(value reflect.Value, bean
 		return nil
 	}
 
-	runtime.SetFinalizer(value.Interface(), finalFn.Interface())
-
-	return nil
+	rv := finalFn.Call([]reflect.Value{value})
+	switch len(rv) {
+	case 0:
+		return nil
+	case 1:
+		if e, ok := rv[0].Interface().(error); ok {
+			return fmt.Errorf(
+				"Finalize bean [%v] failed. Caused by: %v",
+				*bean,
+				e,
+			)
+		} else {
+			return fmt.Errorf(
+				"Finalize function of bean [%v] returns 1 unexpected value",
+				*bean,
+			)
+		}
+	default:
+		return fmt.Errorf(
+			"Finalize function of bean [%v] returns %d unexpected values",
+			*bean,
+			len(rv),
+		)
+	}
 }
 
 func (ctx *applicationContext) findFinalizeFn(value reflect.Value, bean *bean) *reflect.Value {
-	if bean.finalizeFn != nil {
-		return bean.finalizeFn
-	}
 
 	switch value.Type().Kind() {
 	case reflect.Ptr:
@@ -258,7 +285,7 @@ func (ctx *applicationContext) findFinalizeFn(value reflect.Value, bean *bean) *
 		return nil
 	}
 
-	method, ok := value.Type().MethodByName("Finalize")
+	method, ok := value.Type().MethodByName(bean.finalizeFnName)
 	if !ok {
 		return nil
 	}
