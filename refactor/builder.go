@@ -15,7 +15,7 @@ func Bean(tvpe interface{}) StructBeanI {
 	f := "Finalize"
 	return &structBean{
 		tvpe:       reflect.TypeOf(tvpe),
-		properties: make(map[string][]interface{}),
+		properties: make(map[string][]BeanI),
 		init:       &i,
 		finalize:   &f,
 		scope:      Default,

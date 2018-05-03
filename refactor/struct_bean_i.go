@@ -11,12 +11,12 @@ const (
 )
 
 type StructBeanI interface {
-	GetFactory() (interface{}, []interface{})
+	GetFactory() (interface{}, []BeanI)
 	GetFinalize() *string
 	GetID() *string
 	GetInit() *string
-	GetProperty(name string) []interface{}
-	GetProperties() map[string][]interface{}
+	GetProperty(name string) []BeanI
+	GetProperties() map[string][]BeanI
 	GetScope() Scope
 	GetType() reflect.Type
 	Factory(fn interface{}, argv ...interface{}) StructBeanI

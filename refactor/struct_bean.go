@@ -5,9 +5,9 @@ import "reflect"
 type structBean struct {
 	id          *string
 	tvpe        reflect.Type
-	properties  map[string][]interface{}
+	properties  map[string][]BeanI
 	factoryFn   interface{}
-	factoryArgv []interface{}
+	factoryArgv []BeanI
 	init        *string
 	finalize    *string
 	scope       Scope
@@ -15,7 +15,7 @@ type structBean struct {
 
 func (bean *structBean) Factory(fn interface{}, argv ...interface{}) StructBeanI {
 	bean.factoryFn = fn
-	bean.factoryArgv = argv
+	bean.factoryArgv = Beans(argv...)
 	return bean
 }
 
@@ -35,7 +35,7 @@ func (bean *structBean) Init(fnName string) StructBeanI {
 }
 
 func (bean *structBean) Property(name string, values ...interface{}) StructBeanI {
-	bean.properties[name] = values
+	bean.properties[name] = Beans(values...)
 	return bean
 }
 
@@ -44,7 +44,7 @@ func (bean *structBean) TypeOf(i interface{}) StructBeanI {
 	return bean
 }
 
-func (bean *structBean) GetFactory() (interface{}, []interface{}) {
+func (bean *structBean) GetFactory() (interface{}, []BeanI) {
 	return bean.factoryFn, bean.factoryArgv
 }
 
@@ -60,12 +60,12 @@ func (bean *structBean) GetInit() *string {
 	return bean.init
 }
 
-func (bean *structBean) GetProperty(name string) []interface{} {
+func (bean *structBean) GetProperty(name string) []BeanI {
 	value, _ := bean.properties[name]
 	return value
 }
 
-func (bean *structBean) GetProperties() map[string][]interface{} {
+func (bean *structBean) GetProperties() map[string][]BeanI {
 	return bean.properties
 }
 
