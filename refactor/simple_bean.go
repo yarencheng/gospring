@@ -1,11 +1,15 @@
 package refactor
 
 type simpleBean struct {
-	id         *string
-	properties map[string][]interface{}
+	id          *string
+	properties  map[string][]interface{}
+	factoryFn   interface{}
+	factoryArgv []interface{}
 }
 
 func (bean *simpleBean) Factory(fn interface{}, argv ...interface{}) BeanI {
+	bean.factoryFn = fn
+	bean.factoryArgv = argv
 	return bean
 }
 
@@ -27,12 +31,8 @@ func (bean *simpleBean) Property(name string, values ...interface{}) BeanI {
 	return bean
 }
 
-func (bean *simpleBean) GetFactory() interface{} {
-	return nil
-}
-
-func (bean *simpleBean) GetFactoryArgv() []interface{} {
-	return nil
+func (bean *simpleBean) GetFactory() (interface{}, []interface{}) {
+	return bean.factoryFn, bean.factoryArgv
 }
 
 func (bean *simpleBean) GetID() *string {

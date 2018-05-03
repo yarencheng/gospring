@@ -24,12 +24,8 @@ func (bean *referenceBean) Property(name string, values ...interface{}) BeanI {
 	return bean
 }
 
-func (bean *referenceBean) GetFactory() interface{} {
-	return nil
-}
-
-func (bean *referenceBean) GetFactoryArgv() []interface{} {
-	return nil
+func (bean *referenceBean) GetFactory() (interface{}, []interface{}) {
+	return nil, []interface{}{}
 }
 
 func (bean *referenceBean) GetID() *string {
