@@ -1,5 +1,7 @@
 package refactor
 
+import "reflect"
+
 type referenceBean struct {
 	targetId string
 }
@@ -24,6 +26,10 @@ func (bean *referenceBean) Property(name string, values ...interface{}) BeanI {
 	return bean
 }
 
+func (bean *referenceBean) TypeOf(i interface{}) BeanI {
+	return bean
+}
+
 func (bean *referenceBean) GetFactory() (interface{}, []interface{}) {
 	return nil, []interface{}{}
 }
@@ -42,4 +48,8 @@ func (bean *referenceBean) GetInit() *string {
 
 func (bean *referenceBean) GetProperty(name string) []interface{} {
 	return nil
+}
+
+func (bean *referenceBean) GetType() reflect.Type {
+	return reflect.TypeOf(nil)
 }

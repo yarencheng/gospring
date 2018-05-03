@@ -1,7 +1,10 @@
 package refactor
 
+import "reflect"
+
 type simpleBean struct {
 	id          *string
+	tvpe        reflect.Type
 	properties  map[string][]interface{}
 	factoryFn   interface{}
 	factoryArgv []interface{}
@@ -35,6 +38,11 @@ func (bean *simpleBean) Property(name string, values ...interface{}) BeanI {
 	return bean
 }
 
+func (bean *simpleBean) TypeOf(i interface{}) BeanI {
+	bean.tvpe = reflect.TypeOf(i)
+	return bean
+}
+
 func (bean *simpleBean) GetFactory() (interface{}, []interface{}) {
 	return bean.factoryFn, bean.factoryArgv
 }
@@ -54,4 +62,8 @@ func (bean *simpleBean) GetInit() *string {
 func (bean *simpleBean) GetProperty(name string) []interface{} {
 	value, _ := bean.properties[name]
 	return value
+}
+
+func (bean *simpleBean) GetType() reflect.Type {
+	return bean.tvpe
 }
