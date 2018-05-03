@@ -2,6 +2,12 @@ package refactor
 
 import "reflect"
 
+func Ref(id string) BeanI {
+	return &referenceBean{
+		targetId: id,
+	}
+}
+
 type referenceBean struct {
 	targetId string
 }
