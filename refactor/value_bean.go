@@ -1,12 +1,11 @@
 package refactor
 
 type valueBean struct {
-	id    *string
 	value interface{}
 }
 
 func (bean *valueBean) GetID() *string {
-	return bean.id
+	return nil
 }
 
 func (bean *valueBean) GetValue() interface{} {
