@@ -2,7 +2,7 @@ package refactor
 
 import "reflect"
 
-func Bean(tvpe interface{}) BeanI {
+func Bean(tvpe interface{}) StructBeanI {
 	i := "Init"
 	f := "Finalize"
 	return &simpleBean{
@@ -23,33 +23,33 @@ type simpleBean struct {
 	finalize    *string
 }
 
-func (bean *simpleBean) Factory(fn interface{}, argv ...interface{}) BeanI {
+func (bean *simpleBean) Factory(fn interface{}, argv ...interface{}) StructBeanI {
 	bean.factoryFn = fn
 	bean.factoryArgv = argv
 	return bean
 }
 
-func (bean *simpleBean) Finalize(fnName string) BeanI {
+func (bean *simpleBean) Finalize(fnName string) StructBeanI {
 	bean.finalize = &fnName
 	return bean
 }
 
-func (bean *simpleBean) ID(id string) BeanI {
+func (bean *simpleBean) ID(id string) StructBeanI {
 	bean.id = &id
 	return bean
 }
 
-func (bean *simpleBean) Init(fnName string) BeanI {
+func (bean *simpleBean) Init(fnName string) StructBeanI {
 	bean.init = &fnName
 	return bean
 }
 
-func (bean *simpleBean) Property(name string, values ...interface{}) BeanI {
+func (bean *simpleBean) Property(name string, values ...interface{}) StructBeanI {
 	bean.properties[name] = values
 	return bean
 }
 
-func (bean *simpleBean) TypeOf(i interface{}) BeanI {
+func (bean *simpleBean) TypeOf(i interface{}) StructBeanI {
 	bean.tvpe = reflect.TypeOf(i)
 	return bean
 }
