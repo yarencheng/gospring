@@ -5,6 +5,8 @@ type simpleBean struct {
 	properties  map[string][]interface{}
 	factoryFn   interface{}
 	factoryArgv []interface{}
+	init        *string
+	finalize    *string
 }
 
 func (bean *simpleBean) Factory(fn interface{}, argv ...interface{}) BeanI {
@@ -14,6 +16,7 @@ func (bean *simpleBean) Factory(fn interface{}, argv ...interface{}) BeanI {
 }
 
 func (bean *simpleBean) Finalize(fnName string) BeanI {
+	bean.finalize = &fnName
 	return bean
 }
 
@@ -23,6 +26,7 @@ func (bean *simpleBean) ID(id string) BeanI {
 }
 
 func (bean *simpleBean) Init(fnName string) BeanI {
+	bean.init = &fnName
 	return bean
 }
 
@@ -35,12 +39,16 @@ func (bean *simpleBean) GetFactory() (interface{}, []interface{}) {
 	return bean.factoryFn, bean.factoryArgv
 }
 
+func (bean *simpleBean) GetFinalize() *string {
+	return bean.finalize
+}
+
 func (bean *simpleBean) GetID() *string {
 	return bean.id
 }
 
 func (bean *simpleBean) GetInit() *string {
-	return nil
+	return bean.init
 }
 
 func (bean *simpleBean) GetProperty(name string) []interface{} {

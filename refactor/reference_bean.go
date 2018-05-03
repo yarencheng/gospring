@@ -28,6 +28,10 @@ func (bean *referenceBean) GetFactory() (interface{}, []interface{}) {
 	return nil, []interface{}{}
 }
 
+func (bean *referenceBean) GetFinalize() *string {
+	return nil
+}
+
 func (bean *referenceBean) GetID() *string {
 	return &bean.targetId
 }

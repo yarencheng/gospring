@@ -7,6 +7,7 @@ type BeanI interface {
 	Init(fnName string) BeanI
 	Property(name string, values ...interface{}) BeanI
 	GetFactory() (interface{}, []interface{})
+	GetFinalize() *string
 	GetID() *string
 	GetInit() *string
 	GetProperty(name string) []interface{}
