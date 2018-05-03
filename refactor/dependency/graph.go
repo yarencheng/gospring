@@ -1,22 +1,22 @@
-package refactor
+package dependency
 
 type Graph struct {
-	nodes map[string]*node
+	nodes map[string]*Node
 }
-type node struct {
-	parents map[string]*node
+type Node struct {
+	parents map[string]*Node
 	value   string
 }
 
 func NewGraph() *Graph {
 	return &Graph{
-		nodes: make(map[string]*node),
+		nodes: make(map[string]*Node),
 	}
 }
 
-func NewNode(value string) *node {
-	return &node{
-		parents: make(map[string]*node),
+func NewNode(value string) *Node {
+	return &Node{
+		parents: make(map[string]*Node),
 		value:   value,
 	}
 }
