@@ -49,8 +49,30 @@ func Test_isLoop_loop(t *testing.T) {
 	g.AddDependency("b", "c")
 
 	// action
-	b := g.isLoop("c", "a")
 
 	// assert
-	assert.True(t, b)
+	assert.True(t, g.isLoop("c", "a"))
+	assert.True(t, g.isLoop("c", "b"))
+	assert.True(t, g.isLoop("b", "a"))
+}
+
+func Test_isLoop_noloop(t *testing.T) {
+	// arrange
+	// a <- b <- c
+	// d <- e <- f
+	g := NewGraph()
+	g.AddDependency("a", "b")
+	g.AddDependency("b", "c")
+	g.AddDependency("d", "e")
+	g.AddDependency("e", "f")
+
+	// action
+
+	// assert
+	for _, s1 := range []string{"a", "b", "c"} {
+		for _, s2 := range []string{"d", "e", "f"} {
+			assert.False(t, g.isLoop(s1, s2))
+			assert.False(t, g.isLoop(s2, s1))
+		}
+	}
 }
