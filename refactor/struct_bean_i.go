@@ -2,17 +2,28 @@ package refactor
 
 import "reflect"
 
+type Scope string
+
+const (
+	Default   Scope = "Default"
+	Singleton Scope = "Singleton"
+	Prototype Scope = "Prototype"
+)
+
 type StructBeanI interface {
-	Factory(fn interface{}, argv ...interface{}) StructBeanI
-	Finalize(fnName string) StructBeanI
-	ID(id string) StructBeanI
-	Init(fnName string) StructBeanI
-	Property(name string, values ...interface{}) StructBeanI
-	TypeOf(i interface{}) StructBeanI
 	GetFactory() (interface{}, []interface{})
 	GetFinalize() *string
 	GetID() *string
 	GetInit() *string
 	GetProperty(name string) []interface{}
+	GetScope() Scope
 	GetType() reflect.Type
+	Factory(fn interface{}, argv ...interface{}) StructBeanI
+	Finalize(fnName string) StructBeanI
+	ID(id string) StructBeanI
+	Init(fnName string) StructBeanI
+	Property(name string, values ...interface{}) StructBeanI
+	Prototype() StructBeanI
+	Singleton() StructBeanI
+	TypeOf(i interface{}) StructBeanI
 }

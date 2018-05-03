@@ -10,6 +10,7 @@ type structBean struct {
 	factoryArgv []interface{}
 	init        *string
 	finalize    *string
+	scope       Scope
 }
 
 func (bean *structBean) Factory(fn interface{}, argv ...interface{}) StructBeanI {
@@ -66,4 +67,17 @@ func (bean *structBean) GetProperty(name string) []interface{} {
 
 func (bean *structBean) GetType() reflect.Type {
 	return bean.tvpe
+}
+
+func (bean *structBean) Prototype() StructBeanI {
+	bean.scope = Prototype
+	return bean
+}
+func (bean *structBean) Singleton() StructBeanI {
+	bean.scope = Singleton
+	return bean
+}
+
+func (bean *structBean) GetScope() Scope {
+	return bean.scope
 }

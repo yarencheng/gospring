@@ -18,6 +18,7 @@ func Bean(tvpe interface{}) StructBeanI {
 		properties: make(map[string][]interface{}),
 		init:       &i,
 		finalize:   &f,
+		scope:      Default,
 	}
 }
 
