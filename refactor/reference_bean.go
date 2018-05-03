@@ -1,11 +1,5 @@
 package refactor
 
-func Ref(id string) ReferenceBeanI {
-	return &referenceBean{
-		id: id,
-	}
-}
-
 type referenceBean struct {
 	id string
 }
