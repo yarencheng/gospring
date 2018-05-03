@@ -2,6 +2,17 @@ package refactor
 
 import "reflect"
 
+func Bean(tvpe interface{}) BeanI {
+	i := "Init"
+	f := "Finalize"
+	return &simpleBean{
+		tvpe:       reflect.TypeOf(tvpe),
+		properties: make(map[string][]interface{}),
+		init:       &i,
+		finalize:   &f,
+	}
+}
+
 type simpleBean struct {
 	id          *string
 	tvpe        reflect.Type
