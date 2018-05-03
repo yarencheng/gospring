@@ -16,6 +16,7 @@ type StructBeanI interface {
 	GetID() *string
 	GetInit() *string
 	GetProperty(name string) []interface{}
+	GetProperties() map[string][]interface{}
 	GetScope() Scope
 	GetType() reflect.Type
 	Factory(fn interface{}, argv ...interface{}) StructBeanI

@@ -65,6 +65,10 @@ func (bean *structBean) GetProperty(name string) []interface{} {
 	return value
 }
 
+func (bean *structBean) GetProperties() map[string][]interface{} {
+	return bean.properties
+}
+
 func (bean *structBean) GetType() reflect.Type {
 	return bean.tvpe
 }
