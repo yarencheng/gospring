@@ -1,6 +1,8 @@
 package refactor
 
-import "reflect"
+import (
+	"reflect"
+)
 
 func Ref(id string) ReferenceBeanI {
 	return &referenceBean{
