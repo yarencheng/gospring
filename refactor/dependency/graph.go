@@ -1,6 +1,6 @@
 package refactor
 
-type graph struct {
+type Graph struct {
 	nodes map[string]*node
 }
 type node struct {
@@ -8,8 +8,8 @@ type node struct {
 	value   string
 }
 
-func NewGraph() *graph {
-	return &graph{
+func NewGraph() *Graph {
+	return &Graph{
 		nodes: make(map[string]*node),
 	}
 }
@@ -21,7 +21,7 @@ func NewNode(value string) *node {
 	}
 }
 
-func (g *graph) AddDependency(parent string, child string) (ok bool) {
+func (g *Graph) AddDependency(parent string, child string) (ok bool) {
 
 	if g.isLoop(parent, child) {
 		return false
@@ -44,7 +44,7 @@ func (g *graph) AddDependency(parent string, child string) (ok bool) {
 	return true
 }
 
-func (g *graph) isLoop(parent string, child string) bool {
+func (g *Graph) isLoop(parent string, child string) bool {
 
 	if parent == child {
 		return true
