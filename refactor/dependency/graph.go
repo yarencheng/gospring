@@ -41,7 +41,7 @@ func (g *graph) AddDependency(parent string, child string) (ok bool) {
 
 	cNode.parents[parent] = pNode
 
-	return ok
+	return true
 }
 
 func (g *graph) isLoop(parent string, child string) bool {

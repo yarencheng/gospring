@@ -76,3 +76,38 @@ func Test_isLoop_noloop(t *testing.T) {
 		}
 	}
 }
+
+func Test_AddDependency_loop(t *testing.T) {
+	// arrange
+	g := NewGraph()
+	g.AddDependency("a", "b")
+
+	// action
+	b := g.AddDependency("b", "a")
+
+	// assert
+	assert.False(t, b)
+}
+
+func Test_AddDependency_parentAndChildNotExist(t *testing.T) {
+	// arrange
+	g := NewGraph()
+
+	// action
+	b := g.AddDependency("a", "b")
+
+	// assert
+	assert.True(t, b)
+}
+
+func Test_AddDependency_parentAndChildExist(t *testing.T) {
+	// arrange
+	g := NewGraph()
+	g.AddDependency("a", "b")
+
+	// action
+	b := g.AddDependency("a", "b")
+
+	// assert
+	assert.True(t, b)
+}
