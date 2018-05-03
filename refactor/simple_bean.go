@@ -1,6 +1,7 @@
 package refactor
 
 type simpleBean struct {
+	id *string
 }
 
 func (bean *simpleBean) Factory(fn interface{}, argv ...interface{}) BeanI {
@@ -12,6 +13,7 @@ func (bean *simpleBean) Finalize(fnName string) BeanI {
 }
 
 func (bean *simpleBean) ID(id string) BeanI {
+	bean.id = &id
 	return bean
 }
 
@@ -32,7 +34,7 @@ func (bean *simpleBean) GetFactoryArgv() []interface{} {
 }
 
 func (bean *simpleBean) GetID() *string {
-	return nil
+	return bean.id
 }
 
 func (bean *simpleBean) GetInit() *string {
