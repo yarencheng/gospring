@@ -152,12 +152,114 @@ func Test_NewApplicationContext_StructBeanI_withDuplicatedId(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
-func Test_NewApplicationContext_StructBeanI_factoryNotFunction(t *testing.T) {
+func Test_NewApplicationContext_StructBeanI_checkFactory_notFunction(t *testing.T) {
 	// arrange
 	type beanStract struct{}
 	beans := Beans(
 		Bean(beanStract{}).
 			Factory(""),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_checkFactory_lengthOfArgvMismatch_1(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(&beanStract{}).
+			Factory(func(i int) *beanStract {
+				return nil
+			}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_checkFactory_lengthOfArgvMismatch_2(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(&beanStract{}).
+			Factory(func() *beanStract {
+				return nil
+			}, 123),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_checkFactory_returnOneValue(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(&beanStract{}).
+			Factory(func() string {
+				return "return something else"
+			}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_checkFactory_returnTwoValue_1(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(&beanStract{}).
+			Factory(func() (string, error) {
+				return "return something else", nil
+			}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_checkFactory_returnTwoValue_2(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(&beanStract{}).
+			Factory(func() (*beanStract, string) {
+				return nil, "return something else"
+			}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_checkFactory_returnMoreThanTwoValue(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(&beanStract{}).
+			Factory(func() (*beanStract, error, string) {
+				return nil, nil, "return something more"
+			}),
 	)
 
 	// action

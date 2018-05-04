@@ -101,9 +101,35 @@ func (ctx *applicationContext) addStructBean(bean StructBeanI) error {
 		ctx.beanById[*id] = bean
 	}
 
-	factoryFn, _ := bean.GetFactory()
-	if factoryFn != nil && reflect.TypeOf(factoryFn).Kind() != reflect.Func {
-		return fmt.Errorf("Factory of bean [%v] is not a function but a [%v]", bean, reflect.TypeOf(factoryFn).Kind())
+	if fn, argv := bean.GetFactory(); fn != nil {
+		tvpe := reflect.TypeOf(fn)
+
+		if tvpe.Kind() != reflect.Func {
+			return fmt.Errorf("Factory of bean [%v] is not a function but a [%v]", bean, tvpe.Kind())
+		}
+
+		if len(argv) != tvpe.NumIn() {
+			return fmt.Errorf("Factory of bean [%v] need [%v] instead of [%v] parameters", bean, len(argv), tvpe.NumIn())
+		}
+
+		switch tvpe.NumOut() {
+		case 1:
+			if tvpe.Out(0) != bean.GetType() {
+				return fmt.Errorf("The return type from factory function of bean [%v] is [%v] instead of [%v]",
+					bean, tvpe.Out(0), bean.GetType())
+			}
+		case 2:
+			if tvpe.Out(0) != bean.GetType() {
+				return fmt.Errorf("The 1st return type from factory function of bean [%v] is [%v] instead of [%v]",
+					bean, tvpe.Out(0), bean.GetType())
+			}
+			if tvpe.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
+				return fmt.Errorf("The 2nd return type from factory function of bean [%v] is [%v] instead of error",
+					bean, tvpe.Out(1))
+			}
+		default:
+			return fmt.Errorf("Factory of bean [%v] should return (interface{}) or (interface{},error)", bean)
+		}
 	}
 
 	switch bean.GetScope() {
@@ -213,11 +239,25 @@ func (ctx *applicationContext) getPrototypeBean(bean StructBeanI) (*reflect.Valu
 
 	factoryReturns := reflect.ValueOf(factory).Call(factoryArgvValues)
 
-	// var value *reflect.Value
+	var value *reflect.Value
 
 	switch len(factoryReturns) {
 	case 0:
+		return nil, fmt.Errorf("Factory function of bean [%v] returns nothing", bean)
+	case 1:
+		value = &factoryReturns[0]
+		if e, ok := value.Interface().(error); ok {
+			return nil, fmt.Errorf("Create bean [%v] failed. Caused by: %v", bean, e)
+		}
+	default:
+		value = &factoryReturns[0]
+		if e, ok := value.Interface().(error); ok {
+			return nil, fmt.Errorf("Create bean [%v] failed. Caused by: %v", bean, e)
+		}
+		if e, ok := factoryReturns[1].Interface().(error); ok {
+			return nil, fmt.Errorf("Create bean [%v] failed. Caused by: %v", bean, e)
+		}
 	}
 
-	return nil, fmt.Errorf("TODO")
+	return value, nil
 }
