@@ -126,7 +126,6 @@ func (ctx *applicationContext) addStructBean(bean StructBeanI) error {
 			for parentID == nil {
 				if parent, present := ctx.parentByChild[bean]; present {
 					parentID = parent.GetID()
-				} else {
 					break
 				}
 			}
