@@ -200,5 +200,24 @@ func (ctx *applicationContext) getSingletonBean(bean StructBeanI) (*reflect.Valu
 }
 func (ctx *applicationContext) getPrototypeBean(bean StructBeanI) (*reflect.Value, error) {
 
+	factory, factoryArgvBeans := bean.GetFactory()
+	factoryArgvValues := make([]reflect.Value, len(factoryArgvBeans))
+
+	for i, argvBean := range factoryArgvBeans {
+		argvValue, e := ctx.getBean(argvBean)
+		if e != nil {
+			return nil, fmt.Errorf("Create input bean [%v] for factory [%v] failed", argvBean, factory)
+		}
+		factoryArgvValues[i] = *argvValue
+	}
+
+	factoryReturns := reflect.ValueOf(factory).Call(factoryArgvValues)
+
+	// var value *reflect.Value
+
+	switch len(factoryReturns) {
+	case 0:
+	}
+
 	return nil, fmt.Errorf("TODO")
 }
