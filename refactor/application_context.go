@@ -8,22 +8,24 @@ import (
 )
 
 type applicationContext struct {
-	graph      *dependency.Graph
-	beans      map[string]BeanI
-	singletons map[string]*reflect.Value
+	graph         *dependency.Graph
+	beanById      map[string]BeanI
+	parentByChild map[BeanI]BeanI
+	singletons    map[string]*reflect.Value
 }
 
 func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 
 	ctx := applicationContext{
-		graph:      dependency.NewGraph(),
-		beans:      make(map[string]BeanI),
-		singletons: make(map[string]*reflect.Value),
+		graph:         dependency.NewGraph(),
+		beanById:      make(map[string]BeanI),
+		parentByChild: make(map[BeanI]BeanI),
+		singletons:    make(map[string]*reflect.Value),
 	}
 
 	for _, bean := range beans {
-		if e := ctx.addBean(nil, bean); e != nil {
-			return nil, fmt.Errorf("Process bean [%v] failed. Caused by: %v", bean, e)
+		if e := ctx.addBean(bean); e != nil {
+			return nil, fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
 		}
 	}
 
@@ -32,7 +34,7 @@ func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 
 func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
 
-	bean, present := ctx.beans[id]
+	bean, present := ctx.beanById[id]
 
 	if !present {
 		return nil, fmt.Errorf("There is no bean with ID [%v]", id)
@@ -51,59 +53,99 @@ func (ctx *applicationContext) Finalize() error {
 	return nil
 }
 
-func (ctx *applicationContext) addBean(lastId *string, bean BeanI) error {
-
-	id := bean.GetID()
+func (ctx *applicationContext) addBean(bean BeanI) error {
 
 	switch bean.(type) {
 	case ValueBeanI:
+		if e := ctx.addValueBean(bean.(ValueBeanI)); e != nil {
+			return fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
+		}
 	case ReferenceBeanI:
-
-		if lastId != nil {
-			if !ctx.graph.AddDependency(*bean.GetID(), *lastId) {
-				return fmt.Errorf("Found a cyclic dependency between ID [%v] and ID [%v]", *bean.GetID(), *lastId)
-			}
+		if e := ctx.addReferenceBean(bean.(ReferenceBeanI)); e != nil {
+			return fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
 		}
-
 	case StructBeanI:
-
-		if id != nil {
-			if ctx.isIdUsed(*id) {
-				return fmt.Errorf("ID [%v] of bean [%v] is used", *id, bean)
-			}
-			ctx.beans[*id] = bean
+		if e := ctx.addStructBean(bean.(StructBeanI)); e != nil {
+			return fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
 		}
-
-		if lastId != nil && id != nil {
-			if !ctx.graph.AddDependency(*id, *lastId) {
-				return fmt.Errorf("Found a cyclic dependency between ID [%v] and ID [%v]", *id, *lastId)
-			}
-		}
-
-		sBean := bean.(StructBeanI)
-		for _, values := range sBean.GetProperties() {
-			for _, value := range values {
-
-				nextId := lastId
-				if id != nil {
-					nextId = id
-				}
-				if e := ctx.addBean(nextId, value); e != nil {
-					return e
-				}
-			}
-		}
-
 	default:
-		return fmt.Errorf("Type [%T] of bean [%v] is not support", bean, bean)
+		return fmt.Errorf("bean type [%T] is unknown", bean)
+	}
+	return nil
+}
+
+func (ctx *applicationContext) addValueBean(bean ValueBeanI) error {
+
+	id := bean.GetID()
+
+	if id != nil {
+		if _, present := ctx.beanById[*id]; present {
+			return fmt.Errorf("ID [%v] already exist", *id)
+		}
+		ctx.beanById[*id] = bean
 	}
 
 	return nil
 }
 
-func (ctx *applicationContext) isIdUsed(id string) bool {
-	_, present := ctx.beans[id]
-	return present
+func (ctx *applicationContext) addReferenceBean(bean ReferenceBeanI) error {
+	return nil
+}
+
+func (ctx *applicationContext) addStructBean(bean StructBeanI) error {
+
+	if id := bean.GetID(); id != nil {
+		if _, present := ctx.beanById[*id]; present {
+			return fmt.Errorf("ID [%v] already exist", *id)
+		}
+		ctx.beanById[*id] = bean
+	}
+
+	factoryFn, _ := bean.GetFactory()
+	if factoryFn != nil && reflect.TypeOf(factoryFn).Kind() != reflect.Func {
+		return fmt.Errorf("Factory of bean [%v] is not a function but a [%v]", bean, reflect.TypeOf(factoryFn).Kind())
+	}
+
+	switch bean.GetScope() {
+	case Default:
+	case Singleton:
+	case Prototype:
+		if bean.GetFinalize() != nil {
+			return fmt.Errorf("A prototype bean can't have finalizer [%v].", *bean.GetFinalize())
+		}
+	default:
+		return fmt.Errorf("Unkown scope [%v]", bean.GetScope())
+	}
+
+	for _, ps := range bean.GetProperties() {
+		for _, p := range ps {
+
+			ctx.parentByChild[p] = bean
+
+			parentID := bean.GetID()
+			for parentID == nil {
+				if parent, present := ctx.parentByChild[bean]; present {
+					parentID = parent.GetID()
+				} else {
+					break
+				}
+			}
+
+			childID := p.GetID()
+
+			if parentID != nil && childID != nil {
+				if !ctx.graph.AddDependency(*childID, *parentID) {
+					return fmt.Errorf("Found a circle dependency from [%v] tp [%v]", *parentID, *childID)
+				}
+			}
+
+			if e := ctx.addBean(p); e != nil {
+				return fmt.Errorf("Can't add property bean [%v]. Cuased by: %v", p, e)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
@@ -115,7 +157,7 @@ func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 		return &v, nil
 	case ReferenceBeanI:
 		id := bean.(ReferenceBeanI).GetID()
-		v, e := ctx.getBean(ctx.beans[*id])
+		v, e := ctx.getBean(ctx.beanById[*id])
 		if e != nil {
 			return nil, e
 		}

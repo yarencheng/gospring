@@ -3,10 +3,49 @@ package refactor
 import (
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
+
+type ValueBeanMock struct {
+	mock.Mock
+}
+
+func (m *ValueBeanMock) GetID() *string {
+	args := m.Called()
+	s := args.Get(0)
+	if s == nil {
+		return nil
+	} else {
+		return s.(*string)
+	}
+}
+
+func (m *ValueBeanMock) GetValue() interface{} {
+	args := m.Called()
+	return args.Get(0)
+}
+
+type ReferenceBeanMock struct {
+	mock.Mock
+}
+
+func (m *ReferenceBeanMock) GetID() *string {
+	args := m.Called()
+	s := args.Get(0)
+	if s == nil {
+		return nil
+	} else {
+		return s.(*string)
+	}
+}
+
+func (m *ReferenceBeanMock) ID(id string) ReferenceBeanI {
+	args := m.Called(id)
+	return args.Get(0).(ReferenceBeanI)
+}
 
 func Test_NewApplicationContext_empty(t *testing.T) {
 	// arrange
@@ -18,21 +57,61 @@ func Test_NewApplicationContext_empty(t *testing.T) {
 	assert.Nil(t, e)
 }
 
-func Test_NewApplicationContext_ValueBeanI(t *testing.T) {
+func Test_NewApplicationContext_ValueBeanI_withoutId(t *testing.T) {
 	// arrange
-	beans := Beans(111)
+	mock := new(ValueBeanMock)
+	mock.On("GetID").Return(nil)
+
+	beans := []BeanI{mock}
 
 	// action
-	_, e := NewApplicationContext(beans...)
+	ctx, e := NewApplicationContext(beans...)
 	require.Nil(t, e)
 
 	// assert
-	assert.Nil(t, e)
+	assert.NotContains(t, ctx.(*applicationContext).beanById, mock)
+}
+
+func Test_NewApplicationContext_ValueBeanI_withId(t *testing.T) {
+	// arrange
+	id := "id"
+
+	mock := new(ValueBeanMock)
+	mock.On("GetID").Return(&id)
+
+	beans := []BeanI{mock}
+
+	// action
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// assert
+	assert.Contains(t, ctx.(*applicationContext).beanById, id)
+}
+
+func Test_NewApplicationContext_ValueBeanI_withDuplicatedId(t *testing.T) {
+	// arrange
+	id := "id"
+
+	mock1 := new(ValueBeanMock)
+	mock1.On("GetID").Return(&id)
+	mock2 := new(ValueBeanMock)
+	mock2.On("GetID").Return(&id)
+
+	beans := []BeanI{mock1, mock2}
+
+	// action
+	_, e := NewApplicationContext(beans...)
+	require.NotNil(t, e)
+
+	// assert
 }
 
 func Test_NewApplicationContext_ReferenceBeanI(t *testing.T) {
 	// arrange
-	beans := Beans(111)
+	mock := new(ReferenceBeanMock)
+	mock.On("GetID").Return(nil)
+	beans := []BeanI{mock}
 
 	// action
 	_, e := NewApplicationContext(beans...)
@@ -41,15 +120,80 @@ func Test_NewApplicationContext_ReferenceBeanI(t *testing.T) {
 	assert.Nil(t, e)
 }
 
-func Test_NewApplicationContext_ReferenceBeanI_loop(t *testing.T) {
+func Test_NewApplicationContext_StructBeanI_withId(t *testing.T) {
+	// arrange
+	id := "id"
+	type beanStract struct{}
+	beans := Beans(
+		Bean(beanStract{}).ID(id),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// assert
+	assert.Contains(t, ctx.(*applicationContext).beanById, id)
+}
+
+func Test_NewApplicationContext_StructBeanI_withDuplicatedId(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(beanStract{}).ID("id"),
+		Bean(beanStract{}).ID("id"),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_factoryNotFunction(t *testing.T) {
 	// arrange
 	type beanStract struct{}
 	beans := Beans(
 		Bean(beanStract{}).
-			ID("id_1").
-			Property("aaa", Bean(beanStract{}).
-				ID("id_2").
-				Property("aaa", Ref("id_1")),
+			Factory(""),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_prototypeWithFinalizer(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(beanStract{}).
+			Prototype().
+			Finalize("aa"),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_NewApplicationContext_StructBeanI_dependencyLoop_1(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(beanStract{}).ID("id_1").
+			Property("aa",
+				Bean(beanStract{}).
+					ID("id_2").
+					Property("aa",
+						Ref("id_1"),
+					),
 			),
 	)
 
@@ -60,26 +204,17 @@ func Test_NewApplicationContext_ReferenceBeanI_loop(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
-func Test_NewApplicationContext_StructBeanI(t *testing.T) {
+func Test_NewApplicationContext_StructBeanI_dependencyLoop_2(t *testing.T) {
 	// arrange
 	type beanStract struct{}
 	beans := Beans(
-		Bean(beanStract{}),
-	)
-
-	// action
-	_, e := NewApplicationContext(beans...)
-
-	// assert
-	assert.Nil(t, e)
-}
-
-func Test_NewApplicationContext_StructBeanI_idIsDuplicated(t *testing.T) {
-	// arrange
-	type beanStract struct{}
-	beans := Beans(
-		Bean(beanStract{}).ID("id"),
-		Bean(beanStract{}).ID("id"),
+		Bean(beanStract{}).ID("id_1").
+			Property("aa",
+				Bean(beanStract{}).
+					Property("aa",
+						Ref("id_1"),
+					),
+			),
 	)
 
 	// action
@@ -87,20 +222,4 @@ func Test_NewApplicationContext_StructBeanI_idIsDuplicated(t *testing.T) {
 
 	// assert
 	assert.NotNil(t, e)
-}
-
-func Test_NewApplicationContext_StructBeanI_haveProperty(t *testing.T) {
-	// arrange
-	type beanStract struct{}
-	beans := Beans(
-		Bean(beanStract{}).
-			ID("id").
-			Property("a", 123),
-	)
-
-	// action
-	_, e := NewApplicationContext(beans...)
-
-	// assert
-	assert.Nil(t, e)
 }
