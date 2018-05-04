@@ -1,6 +1,6 @@
 package refactor
 
 type ApplicationContextI interface {
-	GetBean() (interface{}, error)
+	GetBean(id string) (interface{}, error)
 	Finalize() error
 }

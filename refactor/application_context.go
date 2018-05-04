@@ -2,22 +2,23 @@ package refactor
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/yarencheng/gospring/refactor/dependency"
 )
 
 type applicationContext struct {
-	graph           *dependency.Graph
-	beans           map[string]BeanI
-	singletonValues map[string]interface{}
+	graph      *dependency.Graph
+	beans      map[string]BeanI
+	singletons map[string]*reflect.Value
 }
 
 func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 
 	ctx := applicationContext{
-		graph:           dependency.NewGraph(),
-		beans:           make(map[string]BeanI),
-		singletonValues: make(map[string]interface{}),
+		graph:      dependency.NewGraph(),
+		beans:      make(map[string]BeanI),
+		singletons: make(map[string]*reflect.Value),
 	}
 
 	for _, bean := range beans {
@@ -29,8 +30,21 @@ func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 	return &ctx, nil
 }
 
-func (ctx *applicationContext) GetBean() (interface{}, error) {
-	return nil, nil
+func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
+
+	bean, present := ctx.beans[id]
+
+	if !present {
+		return nil, fmt.Errorf("There is no bean with ID [%v]", id)
+	}
+
+	value, e := ctx.getBean(bean)
+
+	if e != nil {
+		return nil, e
+	}
+
+	return value.Interface(), nil
 }
 
 func (ctx *applicationContext) Finalize() error {
@@ -90,4 +104,60 @@ func (ctx *applicationContext) addBean(lastId *string, bean BeanI) error {
 func (ctx *applicationContext) isIdUsed(id string) bool {
 	_, present := ctx.beans[id]
 	return present
+}
+
+func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
+
+	switch bean.(type) {
+	case ValueBeanI:
+		i := bean.(ValueBeanI).GetValue()
+		v := reflect.ValueOf(i)
+		return &v, nil
+	case ReferenceBeanI:
+		id := bean.(ReferenceBeanI).GetID()
+		v, e := ctx.getBean(ctx.beans[*id])
+		if e != nil {
+			return nil, e
+		}
+		return v, nil
+	case StructBeanI:
+	default:
+		return nil, fmt.Errorf("Type [%T] of bean [%v] is not support", bean, bean)
+	}
+
+	sBean := bean.(StructBeanI)
+	switch sBean.GetScope() {
+	case Singleton:
+		return ctx.getSingletonBean(sBean)
+	case Prototype:
+		return ctx.getPrototypeBean(sBean)
+	case Default:
+		return ctx.getSingletonBean(sBean)
+	default:
+		return nil, fmt.Errorf("Scope [%T] of bean [%v] is not support", sBean.GetScope(), sBean)
+	}
+}
+
+func (ctx *applicationContext) getSingletonBean(bean StructBeanI) (*reflect.Value, error) {
+
+	value, present := ctx.singletons[*bean.GetID()]
+
+	if present {
+		return value, nil
+	}
+
+	var e error
+	value, e = ctx.getPrototypeBean(bean)
+
+	if e != nil {
+		return nil, e
+	}
+
+	ctx.singletons[*bean.GetID()] = value
+
+	return value, nil
+}
+func (ctx *applicationContext) getPrototypeBean(bean StructBeanI) (*reflect.Value, error) {
+
+	return nil, fmt.Errorf("TODO")
 }
