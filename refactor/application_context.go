@@ -64,11 +64,9 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 		}
 	}
 
-	if _, ok := bean.(StructBeanI); ok {
-		if tvpe := bean.GetType(); tvpe != nil {
-			if tvpe.Kind() == reflect.Ptr {
-				return fmt.Errorf("Type of bean [%v] is a pointer instead of struct", bean)
-			}
+	if tvpe := bean.GetType(); tvpe != nil {
+		if tvpe.Kind() == reflect.Ptr {
+			return fmt.Errorf("Type of bean [%v] is a pointer instead of struct", bean)
 		}
 	}
 

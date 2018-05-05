@@ -55,7 +55,13 @@ func (m *ValueBeanMock) GetProperties() map[string][]BeanI {
 }
 
 func (m *ValueBeanMock) GetType() reflect.Type {
-	return m.Called().Get(0).(reflect.Type)
+	args := m.Called()
+	s := args.Get(0)
+	if s == nil {
+		return nil
+	} else {
+		return s.(reflect.Type)
+	}
 }
 
 type ReferenceBeanMock struct {
@@ -126,6 +132,7 @@ func Test_NewApplicationContext_ValueBeanI_withoutId(t *testing.T) {
 	mock.On("GetFactory").Return(nil, []BeanI{})
 	mock.On("GetScope").Return(Singleton)
 	mock.On("GetProperties").Return(map[string][]BeanI{})
+	mock.On("GetType").Return(nil)
 
 	beans := []BeanI{mock}
 
@@ -146,6 +153,7 @@ func Test_NewApplicationContext_ValueBeanI_withId(t *testing.T) {
 	mock.On("GetFactory").Return(nil, []BeanI{})
 	mock.On("GetScope").Return(Singleton)
 	mock.On("GetProperties").Return(map[string][]BeanI{})
+	mock.On("GetType").Return(nil)
 
 	beans := []BeanI{mock}
 
@@ -166,12 +174,14 @@ func Test_NewApplicationContext_ValueBeanI_withDuplicatedId(t *testing.T) {
 	mock1.On("GetFactory").Return(nil, []BeanI{})
 	mock1.On("GetScope").Return(Singleton)
 	mock1.On("GetProperties").Return(map[string][]BeanI{})
+	mock1.On("GetType").Return(nil)
 
 	mock2 := new(ValueBeanMock)
 	mock2.On("GetID").Return(&id)
 	mock2.On("GetFactory").Return(nil, []BeanI{})
 	mock2.On("GetScope").Return(Singleton)
 	mock2.On("GetProperties").Return(map[string][]BeanI{})
+	mock1.On("GetType").Return(nil)
 
 	beans := []BeanI{mock1, mock2}
 
