@@ -196,6 +196,7 @@ func (ctx *applicationContext) getSingletonBean(bean BeanI) (*reflect.Value, err
 func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, error) {
 
 	factory, factoryArgvBeans := bean.GetFactory()
+	factoryV := reflect.ValueOf(factory)
 	factoryArgvValues := make([]reflect.Value, len(factoryArgvBeans))
 
 	for i, argvBean := range factoryArgvBeans {
@@ -204,9 +205,21 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 			return nil, fmt.Errorf("Create input bean [%v] for factory [%v] failed", argvBean, factory)
 		}
 		factoryArgvValues[i] = *argvValue
+
+		if factoryArgvValues[i].Type() == factoryV.Type().In(i) {
+			factoryArgvValues[i] = *argvValue
+		} else if factoryArgvValues[i].Elem().Type() == factoryV.Type().In(i) {
+			factoryArgvValues[i] = argvValue.Elem()
+		} else {
+			return nil, fmt.Errorf("Parameter type of factory isn't [%v] nor [%v]",
+				factoryArgvValues[i].Type(),
+				factoryArgvValues[i].Elem().Type(),
+			)
+		}
+
 	}
 
-	factoryReturns := reflect.ValueOf(factory).Call(factoryArgvValues)
+	factoryReturns := factoryV.Call(factoryArgvValues)
 
 	for i, _ := range factoryReturns {
 		if factoryReturns[i].Type().Kind() == reflect.Interface {

@@ -479,11 +479,30 @@ func Test_applicationContext_GetBean_fromFactory(t *testing.T) {
 	assert.Equal(t, expected, *actual.(*string))
 }
 
-func Test_applicationContext_GetBean_fromFactory_withParameter(t *testing.T) {
+func Test_applicationContext_GetBean_fromFactory_withPointerParameter(t *testing.T) {
 	// arrange
 	beans := Beans(
 		Bean(string("")).ID("id_1").Factory(func(in *string) *string {
 			s := "Hi " + *in
+			return &s
+		}, "gospring"),
+	)
+
+	// action
+	ctx, ctxe := NewApplicationContext(beans...)
+	require.Nil(t, ctxe)
+	actual, beane := ctx.GetBean("id_1")
+	require.Nil(t, beane)
+
+	// assert
+	assert.Equal(t, "Hi gospring", *actual.(*string))
+}
+
+func Test_applicationContext_GetBean_fromFactory_withNonPointerParameter(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(string("")).ID("id_1").Factory(func(in string) *string {
+			s := "Hi " + in
 			return &s
 		}, "gospring"),
 	)
