@@ -101,6 +101,10 @@ func (ctx *applicationContext) addStructBean(bean StructBeanI) error {
 		ctx.beanById[*id] = bean
 	}
 
+	if bean.GetType().Kind() == reflect.Ptr {
+		return fmt.Errorf("Type of bean [%v] is a pointer instead of struct", bean)
+	}
+
 	if fn, argv := bean.GetFactory(); fn != nil {
 		tvpe := reflect.TypeOf(fn)
 

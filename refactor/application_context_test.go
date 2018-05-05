@@ -327,6 +327,20 @@ func Test_NewApplicationContext_StructBeanI_dependencyLoop_2(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
+func Test_NewApplicationContext_typeOfbeanCantBePointer(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(&beanStract{}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
 func Test_applicationContext_GetBean_idExist(t *testing.T) {
 	// arrange
 	type beanStract struct{}
