@@ -378,8 +378,8 @@ func Test_applicationContext_GetBean_fromFactory(t *testing.T) {
 	// arrange
 	expected := "content text"
 	beans := Beans(
-		Bean(string("")).ID("id_1").Factory(func() string {
-			return expected
+		Bean(string("")).ID("id_1").Factory(func() *string {
+			return &expected
 		}),
 	)
 
@@ -390,14 +390,15 @@ func Test_applicationContext_GetBean_fromFactory(t *testing.T) {
 	require.Nil(t, beane)
 
 	// assert
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, expected, *actual.(*string))
 }
 
 func Test_applicationContext_GetBean_fromFactory_withParameter(t *testing.T) {
 	// arrange
 	beans := Beans(
-		Bean(string("")).ID("id_1").Factory(func(in string) string {
-			return "Hi " + in
+		Bean(string("")).ID("id_1").Factory(func(in string) *string {
+			s := "Hi " + in
+			return &s
 		}, "gospring"),
 	)
 
@@ -408,17 +409,19 @@ func Test_applicationContext_GetBean_fromFactory_withParameter(t *testing.T) {
 	require.Nil(t, beane)
 
 	// assert
-	assert.Equal(t, "Hi gospring", actual)
+	assert.Equal(t, "Hi gospring", *actual.(*string))
 }
 
 func Test_applicationContext_GetBean_fromFactory_withBeanParameter(t *testing.T) {
 	// arrange
 	beans := Beans(
-		Bean(string("")).ID("id_1").Factory(func(in string) string {
-			return "Hi " + in
+		Bean(string("")).ID("id_1").Factory(func(in *string) *string {
+			s := "Hi " + *in
+			return &s
 		}, Ref("id_2")),
-		Bean(string("")).ID("id_2").Factory(func() string {
-			return "id_2"
+		Bean(string("")).ID("id_2").Factory(func() *string {
+			s := "id_2"
+			return &s
 		}),
 	)
 
@@ -429,7 +432,7 @@ func Test_applicationContext_GetBean_fromFactory_withBeanParameter(t *testing.T)
 	require.Nil(t, beane)
 
 	// assert
-	assert.Equal(t, "Hi id_2", actual)
+	assert.Equal(t, "Hi id_2", *actual.(*string))
 }
 
 func Test_applicationContext_GetBean_fromFactory_returnError_1(t *testing.T) {
@@ -452,8 +455,8 @@ func Test_applicationContext_GetBean_fromFactory_returnError_1(t *testing.T) {
 func Test_applicationContext_GetBean_fromFactory_returnError_2(t *testing.T) {
 	// arrange
 	beans := Beans(
-		Bean(string("")).ID("id_1").Factory(func() (string, error) {
-			return "", fmt.Errorf("")
+		Bean(string("")).ID("id_1").Factory(func() (*string, error) {
+			return nil, fmt.Errorf("")
 		}),
 	)
 
