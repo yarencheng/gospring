@@ -1,6 +1,7 @@
 package refactor
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -324,4 +325,108 @@ func Test_NewApplicationContext_StructBeanI_dependencyLoop_2(t *testing.T) {
 
 	// assert
 	assert.NotNil(t, e)
+}
+
+func Test_applicationContext_GetBean_idExist(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(beanStract{}).ID("id_1"),
+	)
+
+	// action
+	ctx, ctxe := NewApplicationContext(beans...)
+	require.Nil(t, ctxe)
+	bean, beane := ctx.GetBean("id_1")
+	require.Nil(t, beane)
+
+	// assert
+	assert.NotNil(t, bean)
+}
+
+func Test_applicationContext_GetBean_idNotExist(t *testing.T) {
+	// arrange
+	type beanStract struct{}
+	beans := Beans(
+		Bean(beanStract{}).ID("id_1"),
+	)
+
+	// action
+	ctx, ctxe := NewApplicationContext(beans...)
+	require.Nil(t, ctxe)
+	_, beane := ctx.GetBean("id_2")
+
+	// assert
+	require.NotNil(t, beane)
+}
+
+func Test_applicationContext_GetBean_fromFactory(t *testing.T) {
+	// arrange
+	expected := "content text"
+	beans := Beans(
+		Bean(string("")).ID("id_1").Factory(func() string {
+			return expected
+		}),
+	)
+
+	// action
+	ctx, ctxe := NewApplicationContext(beans...)
+	require.Nil(t, ctxe)
+	actual, beane := ctx.GetBean("id_1")
+	require.Nil(t, beane)
+
+	// assert
+	assert.Equal(t, expected, actual)
+}
+
+func Test_applicationContext_GetBean_fromFactory_withParameter(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(string("")).ID("id_1").Factory(func(in string) string {
+			return "Hi " + in
+		}, "gospring"),
+	)
+
+	// action
+	ctx, ctxe := NewApplicationContext(beans...)
+	require.Nil(t, ctxe)
+	actual, beane := ctx.GetBean("id_1")
+	require.Nil(t, beane)
+
+	// assert
+	assert.Equal(t, "Hi gospring", actual)
+}
+
+func Test_applicationContext_GetBean_fromFactory_returnError_1(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(string("")).ID("id_1").Factory(func() interface{} {
+			return fmt.Errorf("")
+		}),
+	)
+
+	// action
+	ctx, ctxe := NewApplicationContext(beans...)
+	require.Nil(t, ctxe)
+	_, beane := ctx.GetBean("id_1")
+
+	// assert
+	assert.NotNil(t, beane)
+}
+
+func Test_applicationContext_GetBean_fromFactory_returnError_2(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(string("")).ID("id_1").Factory(func() (string, error) {
+			return "", fmt.Errorf("")
+		}),
+	)
+
+	// action
+	ctx, ctxe := NewApplicationContext(beans...)
+	require.Nil(t, ctxe)
+	_, beane := ctx.GetBean("id_1")
+
+	// assert
+	assert.NotNil(t, beane)
 }

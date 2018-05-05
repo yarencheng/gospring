@@ -19,6 +19,9 @@ func Bean(tvpe interface{}) StructBeanI {
 		init:       &i,
 		finalize:   &f,
 		scope:      Default,
+		factoryFn: func() interface{} {
+			return reflect.New(reflect.TypeOf(tvpe))
+		},
 	}
 }
 

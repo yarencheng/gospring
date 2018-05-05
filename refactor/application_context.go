@@ -114,12 +114,12 @@ func (ctx *applicationContext) addStructBean(bean StructBeanI) error {
 
 		switch tvpe.NumOut() {
 		case 1:
-			if tvpe.Out(0) != bean.GetType() {
+			if tvpe.Out(0) != bean.GetType() && tvpe.Out(0).Kind() != reflect.Interface {
 				return fmt.Errorf("The return type from factory function of bean [%v] is [%v] instead of [%v]",
 					bean, tvpe.Out(0), bean.GetType())
 			}
 		case 2:
-			if tvpe.Out(0) != bean.GetType() {
+			if tvpe.Out(0) != bean.GetType() && tvpe.Out(0).Kind() != reflect.Interface {
 				return fmt.Errorf("The 1st return type from factory function of bean [%v] is [%v] instead of [%v]",
 					bean, tvpe.Out(0), bean.GetType())
 			}
