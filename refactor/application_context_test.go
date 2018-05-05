@@ -396,8 +396,8 @@ func Test_applicationContext_GetBean_fromFactory(t *testing.T) {
 func Test_applicationContext_GetBean_fromFactory_withParameter(t *testing.T) {
 	// arrange
 	beans := Beans(
-		Bean(string("")).ID("id_1").Factory(func(in string) *string {
-			s := "Hi " + in
+		Bean(string("")).ID("id_1").Factory(func(in *string) *string {
+			s := "Hi " + *in
 			return &s
 		}, "gospring"),
 	)
