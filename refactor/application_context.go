@@ -29,6 +29,16 @@ func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 		}
 	}
 
+	for _, bean := range beans {
+		if rbean, ok := bean.(ReferenceBeanI); ok {
+			if target, present := ctx.beanById[*bean.GetID()]; present {
+				rbean.SetReference(target)
+			} else {
+				return nil, fmt.Errorf("Can't find target bean [%v] referenced by bean [%v]", *bean.GetID(), bean)
+			}
+		}
+	}
+
 	return &ctx, nil
 }
 
@@ -38,6 +48,10 @@ func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
 
 	if !present {
 		return nil, fmt.Errorf("There is no bean with ID [%v]", id)
+	}
+
+	if rbean, ok := bean.(ReferenceBeanI); ok {
+		bean = rbean.GetReference()
 	}
 
 	value, e := ctx.getBean(bean)
@@ -55,54 +69,21 @@ func (ctx *applicationContext) Finalize() error {
 
 func (ctx *applicationContext) addBean(bean BeanI) error {
 
-	switch bean.(type) {
-	case ValueBeanI:
-		if e := ctx.addValueBean(bean.(ValueBeanI)); e != nil {
-			return fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
-		}
-	case ReferenceBeanI:
-		if e := ctx.addReferenceBean(bean.(ReferenceBeanI)); e != nil {
-			return fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
-		}
-	case StructBeanI:
-		if e := ctx.addStructBean(bean.(StructBeanI)); e != nil {
-			return fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
-		}
-	default:
-		return fmt.Errorf("bean type [%T] is unknown", bean)
-	}
-	return nil
-}
-
-func (ctx *applicationContext) addValueBean(bean ValueBeanI) error {
-
-	id := bean.GetID()
-
-	if id != nil {
-		if _, present := ctx.beanById[*id]; present {
-			return fmt.Errorf("ID [%v] already exist", *id)
-		}
-		ctx.beanById[*id] = bean
-	}
-
-	return nil
-}
-
-func (ctx *applicationContext) addReferenceBean(bean ReferenceBeanI) error {
-	return nil
-}
-
-func (ctx *applicationContext) addStructBean(bean StructBeanI) error {
-
 	if id := bean.GetID(); id != nil {
-		if _, present := ctx.beanById[*id]; present {
-			return fmt.Errorf("ID [%v] already exist", *id)
+		if _, ok := bean.(ReferenceBeanI); !ok {
+			if _, present := ctx.beanById[*id]; present {
+				return fmt.Errorf("ID [%v] already exist", *id)
+			}
+			ctx.beanById[*id] = bean
 		}
-		ctx.beanById[*id] = bean
 	}
 
-	if bean.GetType().Kind() == reflect.Ptr {
-		return fmt.Errorf("Type of bean [%v] is a pointer instead of struct", bean)
+	if _, ok := bean.(ValueBeanI); !ok {
+		if tvpe := bean.GetType(); tvpe != nil {
+			if tvpe.Kind() == reflect.Ptr {
+				return fmt.Errorf("Type of bean [%v] is a pointer instead of struct", bean)
+			}
+		}
 	}
 
 	if fn, argv := bean.GetFactory(); fn != nil {
@@ -190,24 +171,7 @@ func (ctx *applicationContext) addStructBean(bean StructBeanI) error {
 
 func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 
-	switch bean.(type) {
-	case ValueBeanI:
-		i := bean.(ValueBeanI).GetValue()
-		v := reflect.ValueOf(i)
-		return &v, nil
-	case ReferenceBeanI:
-		id := bean.(ReferenceBeanI).GetID()
-		v, e := ctx.getBean(ctx.beanById[*id])
-		if e != nil {
-			return nil, e
-		}
-		return v, nil
-	case StructBeanI:
-	default:
-		return nil, fmt.Errorf("Type [%T] of bean [%v] is not support", bean, bean)
-	}
-
-	sBean := bean.(StructBeanI)
+	sBean := bean
 	switch sBean.GetScope() {
 	case Singleton:
 		return ctx.getSingletonBean(sBean)
@@ -220,7 +184,7 @@ func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 	}
 }
 
-func (ctx *applicationContext) getSingletonBean(bean StructBeanI) (*reflect.Value, error) {
+func (ctx *applicationContext) getSingletonBean(bean BeanI) (*reflect.Value, error) {
 
 	value, present := ctx.singletons[*bean.GetID()]
 
@@ -239,7 +203,7 @@ func (ctx *applicationContext) getSingletonBean(bean StructBeanI) (*reflect.Valu
 
 	return value, nil
 }
-func (ctx *applicationContext) getPrototypeBean(bean StructBeanI) (*reflect.Value, error) {
+func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, error) {
 
 	factory, factoryArgvBeans := bean.GetFactory()
 	factoryArgvValues := make([]reflect.Value, len(factoryArgvBeans))

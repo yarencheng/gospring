@@ -20,3 +20,31 @@ func (bean *valueBean) GetValue() interface{} {
 
 	return valuePtr.Interface()
 }
+
+func (bean *valueBean) GetScope() Scope {
+	return Singleton
+}
+
+func (bean *valueBean) GetFactory() (interface{}, []BeanI) {
+	return (*valueBean).GetValue, []BeanI{}
+}
+
+func (bean *valueBean) GetFinalize() *string {
+	return nil
+}
+
+func (bean *valueBean) GetInit() *string {
+	return nil
+}
+
+func (bean *valueBean) GetProperty(name string) []BeanI {
+	return nil
+}
+
+func (bean *valueBean) GetProperties() map[string][]BeanI {
+	return map[string][]BeanI{}
+}
+
+func (bean *valueBean) GetType() reflect.Type {
+	return reflect.TypeOf(bean.value)
+}
