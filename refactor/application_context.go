@@ -29,16 +29,6 @@ func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 		}
 	}
 
-	for _, bean := range beans {
-		if rbean, ok := bean.(ReferenceBeanI); ok {
-			if target, present := ctx.beanById[*bean.GetID()]; present {
-				rbean.SetReference(target)
-			} else {
-				return nil, fmt.Errorf("Can't find target bean [%v] referenced by bean [%v]", *bean.GetID(), bean)
-			}
-		}
-	}
-
 	return &ctx, nil
 }
 
@@ -48,10 +38,6 @@ func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
 
 	if !present {
 		return nil, fmt.Errorf("There is no bean with ID [%v]", id)
-	}
-
-	if rbean, ok := bean.(ReferenceBeanI); ok {
-		bean = rbean.GetReference()
 	}
 
 	value, e := ctx.getBean(bean)
@@ -171,20 +157,27 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 
 func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 
-	sBean := bean
-	switch sBean.GetScope() {
+	if rbean, ok := bean.(ReferenceBeanI); ok {
+		if pbean, p := ctx.beanById[rbean.GetReference()]; p {
+			bean = pbean
+		} else {
+			return nil, fmt.Errorf("There is no bean with ID [%v]", rbean.GetReference())
+		}
+	}
+
+	switch bean.GetScope() {
 	case Singleton:
 		if bean.GetID() != nil {
-			return ctx.getSingletonBean(sBean)
+			return ctx.getSingletonBean(bean)
 		} else {
-			return ctx.getPrototypeBean(sBean)
+			return ctx.getPrototypeBean(bean)
 		}
 	case Prototype:
-		return ctx.getPrototypeBean(sBean)
+		return ctx.getPrototypeBean(bean)
 	case Default:
-		return ctx.getSingletonBean(sBean)
+		return ctx.getSingletonBean(bean)
 	default:
-		return nil, fmt.Errorf("Scope [%T] of bean [%v] is not support", sBean.GetScope(), sBean)
+		return nil, fmt.Errorf("Scope [%T] of bean [%v] is not support", bean.GetScope(), bean)
 	}
 }
 
@@ -216,6 +209,12 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 	}
 
 	factoryReturns := reflect.ValueOf(factory).Call(factoryArgvValues)
+
+	for i, _ := range factoryReturns {
+		if factoryReturns[i].Type().Kind() == reflect.Interface {
+			factoryReturns[i] = factoryReturns[i].Elem()
+		}
+	}
 
 	var value *reflect.Value
 

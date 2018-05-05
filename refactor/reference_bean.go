@@ -3,8 +3,7 @@ package refactor
 import "reflect"
 
 type referenceBean struct {
-	id        string
-	reference BeanI
+	id string
 }
 
 func (bean *referenceBean) GetID() *string {
@@ -22,12 +21,8 @@ func (bean *referenceBean) GetFinalize() *string {
 	return nil
 }
 
-func (bean *referenceBean) GetReference() BeanI {
-	return bean.reference
-}
-
-func (bean *referenceBean) SetReference(b BeanI) {
-	bean.reference = b
+func (bean *referenceBean) GetReference() string {
+	return bean.id
 }
 
 func (bean *referenceBean) GetInit() *string {
