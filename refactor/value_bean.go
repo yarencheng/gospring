@@ -1,6 +1,8 @@
 package refactor
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type valueBean struct {
 	value interface{}
@@ -26,7 +28,10 @@ func (bean *valueBean) GetScope() Scope {
 }
 
 func (bean *valueBean) GetFactory() (interface{}, []BeanI) {
-	return (*valueBean).GetValue, []BeanI{}
+
+	m := reflect.ValueOf(bean).MethodByName("GetValue")
+
+	return m.Interface(), []BeanI{}
 }
 
 func (bean *valueBean) GetFinalize() *string {

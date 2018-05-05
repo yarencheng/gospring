@@ -78,7 +78,7 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 		}
 	}
 
-	if _, ok := bean.(ValueBeanI); !ok {
+	if _, ok := bean.(StructBeanI); ok {
 		if tvpe := bean.GetType(); tvpe != nil {
 			if tvpe.Kind() == reflect.Ptr {
 				return fmt.Errorf("Type of bean [%v] is a pointer instead of struct", bean)
@@ -174,7 +174,11 @@ func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 	sBean := bean
 	switch sBean.GetScope() {
 	case Singleton:
-		return ctx.getSingletonBean(sBean)
+		if bean.GetID() != nil {
+			return ctx.getSingletonBean(sBean)
+		} else {
+			return ctx.getPrototypeBean(sBean)
+		}
 	case Prototype:
 		return ctx.getPrototypeBean(sBean)
 	case Default:
@@ -186,20 +190,15 @@ func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 
 func (ctx *applicationContext) getSingletonBean(bean BeanI) (*reflect.Value, error) {
 
-	value, present := ctx.singletons[*bean.GetID()]
-
-	if present {
+	if value, present := ctx.singletons[*bean.GetID()]; present {
 		return value, nil
 	}
 
-	var e error
-	value, e = ctx.getPrototypeBean(bean)
+	value, e := ctx.getPrototypeBean(bean)
 
 	if e != nil {
 		return nil, e
 	}
-
-	ctx.singletons[*bean.GetID()] = value
 
 	return value, nil
 }

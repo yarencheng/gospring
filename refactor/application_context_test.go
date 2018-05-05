@@ -2,6 +2,7 @@ package refactor
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -25,8 +26,36 @@ func (m *ValueBeanMock) GetID() *string {
 }
 
 func (m *ValueBeanMock) GetValue() interface{} {
+	return m.Called().Get(0)
+}
+
+func (m *ValueBeanMock) GetScope() Scope {
+	return m.Called().Get(0).(Scope)
+}
+
+func (m *ValueBeanMock) GetFactory() (interface{}, []BeanI) {
 	args := m.Called()
-	return args.Get(0)
+	return args.Get(0), args.Get(1).([]BeanI)
+}
+
+func (m *ValueBeanMock) GetFinalize() *string {
+	return m.Called().Get(0).(*string)
+}
+
+func (m *ValueBeanMock) GetInit() *string {
+	return m.Called().Get(0).(*string)
+}
+
+func (m *ValueBeanMock) GetProperty(name string) []BeanI {
+	return m.Called().Get(0).([]BeanI)
+}
+
+func (m *ValueBeanMock) GetProperties() map[string][]BeanI {
+	return m.Called().Get(0).(map[string][]BeanI)
+}
+
+func (m *ValueBeanMock) GetType() reflect.Type {
+	return m.Called().Get(0).(reflect.Type)
 }
 
 type ReferenceBeanMock struct {
@@ -43,9 +72,41 @@ func (m *ReferenceBeanMock) GetID() *string {
 	}
 }
 
-func (m *ReferenceBeanMock) ID(id string) ReferenceBeanI {
-	args := m.Called(id)
-	return args.Get(0).(ReferenceBeanI)
+func (m *ReferenceBeanMock) GetScope() Scope {
+	return m.Called().Get(0).(Scope)
+}
+
+func (m *ReferenceBeanMock) GetFactory() (interface{}, []BeanI) {
+	args := m.Called()
+	return args.Get(0), args.Get(1).([]BeanI)
+}
+
+func (m *ReferenceBeanMock) GetFinalize() *string {
+	return m.Called().Get(0).(*string)
+}
+
+func (m *ReferenceBeanMock) GetInit() *string {
+	return m.Called().Get(0).(*string)
+}
+
+func (m *ReferenceBeanMock) GetProperty(name string) []BeanI {
+	return m.Called().Get(0).([]BeanI)
+}
+
+func (m *ReferenceBeanMock) GetProperties() map[string][]BeanI {
+	return m.Called().Get(0).(map[string][]BeanI)
+}
+
+func (m *ReferenceBeanMock) GetType() reflect.Type {
+	return m.Called().Get(0).(reflect.Type)
+}
+
+func (m *ReferenceBeanMock) GetReference() BeanI {
+	return m.Called().Get(0).(BeanI)
+}
+
+func (m *ReferenceBeanMock) SetReference(b BeanI) {
+	m.Called(b)
 }
 
 func Test_NewApplicationContext_empty(t *testing.T) {
@@ -62,6 +123,9 @@ func Test_NewApplicationContext_ValueBeanI_withoutId(t *testing.T) {
 	// arrange
 	mock := new(ValueBeanMock)
 	mock.On("GetID").Return(nil)
+	mock.On("GetFactory").Return(nil, []BeanI{})
+	mock.On("GetScope").Return(Singleton)
+	mock.On("GetProperties").Return(map[string][]BeanI{})
 
 	beans := []BeanI{mock}
 
@@ -79,6 +143,9 @@ func Test_NewApplicationContext_ValueBeanI_withId(t *testing.T) {
 
 	mock := new(ValueBeanMock)
 	mock.On("GetID").Return(&id)
+	mock.On("GetFactory").Return(nil, []BeanI{})
+	mock.On("GetScope").Return(Singleton)
+	mock.On("GetProperties").Return(map[string][]BeanI{})
 
 	beans := []BeanI{mock}
 
@@ -96,8 +163,15 @@ func Test_NewApplicationContext_ValueBeanI_withDuplicatedId(t *testing.T) {
 
 	mock1 := new(ValueBeanMock)
 	mock1.On("GetID").Return(&id)
+	mock1.On("GetFactory").Return(nil, []BeanI{})
+	mock1.On("GetScope").Return(Singleton)
+	mock1.On("GetProperties").Return(map[string][]BeanI{})
+
 	mock2 := new(ValueBeanMock)
 	mock2.On("GetID").Return(&id)
+	mock2.On("GetFactory").Return(nil, []BeanI{})
+	mock2.On("GetScope").Return(Singleton)
+	mock2.On("GetProperties").Return(map[string][]BeanI{})
 
 	beans := []BeanI{mock1, mock2}
 
@@ -110,9 +184,11 @@ func Test_NewApplicationContext_ValueBeanI_withDuplicatedId(t *testing.T) {
 
 func Test_NewApplicationContext_ReferenceBeanI(t *testing.T) {
 	// arrange
-	mock := new(ReferenceBeanMock)
-	mock.On("GetID").Return(nil)
-	beans := []BeanI{mock}
+	id := "id"
+	beans := Beans(
+		Bean("").ID(id),
+		Ref(id),
+	)
 
 	// action
 	_, e := NewApplicationContext(beans...)
