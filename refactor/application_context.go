@@ -29,6 +29,12 @@ func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 		}
 	}
 
+	for _, bean := range beans {
+		if e := ctx.setRefBean(bean); e != nil {
+			return nil, fmt.Errorf("Can't add bean [%v]. Cuased by: %v", bean, e)
+		}
+	}
+
 	return &ctx, nil
 }
 
@@ -50,6 +56,51 @@ func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
 }
 
 func (ctx *applicationContext) Finalize() error {
+	return nil
+}
+
+func (ctx *applicationContext) setRefBean(parent BeanI) error {
+
+	_, argvs := parent.GetFactory()
+	for i, argv := range argvs {
+		if _, ok := argv.(StructBeanI); ok {
+			if e := ctx.setRefBean(argv); e != nil {
+				return fmt.Errorf("Set reference bean in bean [%v] failed. Caused by: %v", argv, e)
+			}
+			continue
+		}
+		if rbean, ok := argv.(ReferenceBeanI); ok {
+			if target, present := ctx.beanById[*argv.GetID()]; present {
+				rbean.SetReference(target)
+			} else {
+				return fmt.Errorf("Can find ID [%v] of [%d] factory parameter in bean [%v]", *argv.GetID(), i, parent)
+			}
+		}
+	}
+
+	var sbean *structBean
+	var ok bool
+	if sbean, ok = parent.(*structBean); !ok {
+		return nil
+	}
+
+	for name, childs := range sbean.GetProperties() {
+		for _, child := range childs {
+			if _, ok := child.(StructBeanI); ok {
+				if e := ctx.setRefBean(child); e != nil {
+					return fmt.Errorf("Set reference bean in bean [%v] failed. Caused by: %v", child, e)
+				}
+				continue
+			}
+			if rbean, ok := child.(ReferenceBeanI); ok {
+				if target, present := ctx.beanById[*child.GetID()]; present {
+					rbean.SetReference(target)
+				} else {
+					return fmt.Errorf("Can find ID [%v] of property named [%v] in bean [%v]", *child.GetID(), name, parent)
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -156,14 +207,6 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 }
 
 func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
-
-	if rbean, ok := bean.(ReferenceBeanI); ok {
-		if pbean, p := ctx.beanById[rbean.GetReference()]; p {
-			bean = pbean
-		} else {
-			return nil, fmt.Errorf("There is no bean with ID [%v]", rbean.GetReference())
-		}
-	}
 
 	switch bean.GetScope() {
 	case Singleton:

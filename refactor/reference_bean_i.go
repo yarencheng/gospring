@@ -1,5 +1,6 @@
 package refactor
 
 type ReferenceBeanI interface {
-	GetReference() string
+	GetReference() BeanI
+	SetReference(bean BeanI)
 }

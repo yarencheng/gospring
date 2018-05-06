@@ -3,40 +3,77 @@ package refactor
 import "reflect"
 
 type referenceBean struct {
-	id string
+	id        string
+	reference BeanI
 }
 
 func (bean *referenceBean) GetID() *string {
-	return &bean.id
+	if bean.reference == nil {
+		return &bean.id
+	} else {
+		return bean.reference.GetID()
+	}
 }
 func (bean *referenceBean) GetScope() Scope {
-	return Default
+	if bean.reference == nil {
+		return Default
+	} else {
+		return bean.reference.GetScope()
+	}
 }
 
 func (bean *referenceBean) GetFactory() (interface{}, []BeanI) {
-	return nil, nil
+	if bean.reference == nil {
+		return nil, nil
+	} else {
+		return bean.reference.GetFactory()
+	}
 }
 
 func (bean *referenceBean) GetFinalize() *string {
-	return nil
+	if bean.reference == nil {
+		return nil
+	} else {
+		return bean.reference.GetFinalize()
+	}
 }
 
-func (bean *referenceBean) GetReference() string {
-	return bean.id
+func (bean *referenceBean) GetReference() BeanI {
+	return bean.reference
 }
 
 func (bean *referenceBean) GetInit() *string {
-	return nil
+	if bean.reference == nil {
+		return nil
+	} else {
+		return bean.reference.GetInit()
+	}
 }
 
 func (bean *referenceBean) GetProperty(name string) []BeanI {
-	return nil
+	if bean.reference == nil {
+		return nil
+	} else {
+		return bean.reference.GetProperty(name)
+	}
 }
 
 func (bean *referenceBean) GetProperties() map[string][]BeanI {
-	return map[string][]BeanI{}
+	if bean.reference == nil {
+		return map[string][]BeanI{}
+	} else {
+		return bean.reference.GetProperties()
+	}
 }
 
 func (bean *referenceBean) GetType() reflect.Type {
-	return nil
+	if bean.reference == nil {
+		return nil
+	} else {
+		return bean.reference.GetType()
+	}
+}
+
+func (bean *referenceBean) SetReference(b BeanI) {
+	bean.reference = b
 }
