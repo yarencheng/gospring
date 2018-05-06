@@ -55,13 +55,15 @@ func (ctx *applicationContext) Finalize() error {
 
 func (ctx *applicationContext) addBean(bean BeanI) error {
 
+	if _, ok := bean.(ReferenceBeanI); ok {
+		return nil
+	}
+
 	if id := bean.GetID(); id != nil {
-		if _, ok := bean.(ReferenceBeanI); !ok {
-			if _, present := ctx.beanById[*id]; present {
-				return fmt.Errorf("ID [%v] already exist", *id)
-			}
-			ctx.beanById[*id] = bean
+		if _, present := ctx.beanById[*id]; present {
+			return fmt.Errorf("ID [%v] already exist", *id)
 		}
+		ctx.beanById[*id] = bean
 	}
 
 	if tvpe := bean.GetType(); tvpe != nil {
