@@ -254,6 +254,9 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 		if factoryArgvValues[i].Type() == factoryV.Type().In(i) {
 			factoryArgvValues[i] = *argvValue
 		} else if factoryArgvValues[i].Elem().Type() == factoryV.Type().In(i) {
+			if Singleton == argvBean.GetScope() {
+				return nil, fmt.Errorf("Can't inject a singleton to non-pointer filed")
+			}
 			factoryArgvValues[i] = argvValue.Elem()
 		} else {
 			return nil, fmt.Errorf("Parameter type of factory isn't [%v] nor [%v]",

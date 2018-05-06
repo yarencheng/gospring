@@ -24,7 +24,7 @@ func (bean *valueBean) GetValue() interface{} {
 }
 
 func (bean *valueBean) GetScope() Scope {
-	return Singleton
+	return Prototype
 }
 
 func (bean *valueBean) GetFactory() (interface{}, []BeanI) {
