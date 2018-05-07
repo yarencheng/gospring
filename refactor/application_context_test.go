@@ -642,3 +642,78 @@ func Test_applicationContext_GetBean_beanHaveStructProperty(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "abc", your.B.S)
 }
+
+func Test_applicationContext_GetBean_beanHaveIntSliceProperty(t *testing.T) {
+	// arrange
+	type myBean struct {
+		Is []int
+	}
+	beans := Beans(
+		Bean(myBean{}).ID("id_1").Property("Is", 123, 456, 789),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	my, ok := bean.(*myBean)
+	require.True(t, ok)
+	assert.Equal(t, []int{123, 456, 789}, my.Is)
+}
+
+func Test_applicationContext_GetBean_beanHaveStringSliceProperty(t *testing.T) {
+	// arrange
+	type myBean struct {
+		Ss []string
+	}
+	beans := Beans(
+		Bean(myBean{}).ID("id_1").Property("Ss", "aaa", "bbb", "ccc"),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	my, ok := bean.(*myBean)
+	require.True(t, ok)
+	assert.Equal(t, []string{"aaa", "bbb", "ccc"}, my.Ss)
+}
+
+func Test_applicationContext_GetBean_beanHaveStructSliceProperty(t *testing.T) {
+	// arrange
+	type myBean struct {
+		S string
+	}
+	type yourBean struct {
+		B []myBean
+	}
+	beans := Beans(
+		Bean(yourBean{}).ID("id_1").
+			Property("B",
+				Bean(myBean{}).Property("S", "aaa"),
+				Bean(myBean{}).Property("S", "bbb"),
+				Bean(myBean{}).Property("S", "ccc"),
+			),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	your, ok := bean.(*yourBean)
+	require.True(t, ok)
+	assert.Equal(t, []myBean{
+		myBean{S: "aaa"},
+		myBean{S: "bbb"},
+		myBean{S: "ccc"},
+	}, your.B)
+}

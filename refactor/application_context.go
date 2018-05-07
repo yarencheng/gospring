@@ -307,13 +307,12 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 	for name, ps := range bean.GetProperties() {
 
 		field := value.Elem().FieldByName(name)
-		if e := ctx.inject(field, ps[0]); e != nil {
-			return nil, fmt.Errorf("Can't inject field [%v] into bean [%v]. Caused by: %v", name, bean, e)
-		}
 
 		switch field.Type().Kind() {
 		case reflect.Slice:
-			return nil, fmt.Errorf("TODO")
+			if e := ctx.injectSlice(field, ps...); e != nil {
+				return nil, fmt.Errorf("Can't inject field [%v] into bean [%v]. Caused by: %v", name, bean, e)
+			}
 		case reflect.Map:
 			return nil, fmt.Errorf("TODO")
 		default:
@@ -345,11 +344,46 @@ func (ctx *applicationContext) inject(field reflect.Value, bean BeanI) error {
 		}
 		field.Set(pv.Elem())
 	} else {
-		return fmt.Errorf("Type of field isn't [%v] nor [%v]",
+		return fmt.Errorf("Bean [%v] for field isn't [%v] nor [%v]",
+			bean,
 			fromType,
 			fromType.Elem(),
 		)
 	}
+
+	return nil
+}
+
+func (ctx *applicationContext) injectSlice(field reflect.Value, beans ...BeanI) error {
+
+	slice := reflect.MakeSlice(field.Type(), len(beans), len(beans))
+
+	for i, bean := range beans {
+		pv, e := ctx.getBean(bean)
+		if e != nil {
+			return fmt.Errorf("Can't get bean [%v]. Caused by: %v", bean, e)
+		}
+
+		fromType := pv.Type()
+		toType := field.Type().Elem()
+
+		if fromType.ConvertibleTo(toType) {
+			slice.Index(i).Set(*pv)
+		} else if fromType.Elem().ConvertibleTo(toType) {
+			if Singleton == bean.GetScope() {
+				return fmt.Errorf("Can't inject a singleton to non-pointer filed")
+			}
+			slice.Index(i).Set(pv.Elem())
+		} else {
+			return fmt.Errorf("Bean [%v] for field isn't [%v] nor [%v]",
+				bean,
+				fromType,
+				fromType.Elem(),
+			)
+		}
+	}
+
+	field.Set(slice)
 
 	return nil
 }
