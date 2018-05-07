@@ -311,7 +311,16 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 			return nil, fmt.Errorf("Can't inject field [%v] into bean [%v]. Caused by: %v", name, bean, e)
 		}
 
-		// TODO slice
+		switch field.Type().Kind() {
+		case reflect.Slice:
+			return nil, fmt.Errorf("TODO")
+		case reflect.Map:
+			return nil, fmt.Errorf("TODO")
+		default:
+			if e := ctx.inject(field, ps[0]); e != nil {
+				return nil, fmt.Errorf("Can't inject field [%v] into bean [%v]. Caused by: %v", name, bean, e)
+			}
+		}
 
 	}
 
