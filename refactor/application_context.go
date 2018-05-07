@@ -251,9 +251,12 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 		}
 		factoryArgvValues[i] = *argvValue
 
-		if factoryArgvValues[i].Type() == factoryV.Type().In(i) {
+		fromType := factoryArgvValues[i].Type()
+		toType := factoryV.Type().In(i)
+
+		if fromType.ConvertibleTo(toType) {
 			factoryArgvValues[i] = *argvValue
-		} else if factoryArgvValues[i].Elem().Type() == factoryV.Type().In(i) {
+		} else if fromType.Elem().ConvertibleTo(toType) {
 			if Singleton == argvBean.GetScope() {
 				return nil, fmt.Errorf("Can't inject a singleton to non-pointer filed")
 			}
