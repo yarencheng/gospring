@@ -442,6 +442,8 @@ func Test_applicationContext_GetBean_idExist(t *testing.T) {
 
 	// assert
 	assert.NotNil(t, bean)
+	_, ok := bean.(*beanStract)
+	assert.True(t, ok)
 }
 
 func Test_applicationContext_GetBean_idNotExist(t *testing.T) {
@@ -572,4 +574,71 @@ func Test_applicationContext_GetBean_fromFactory_returnError_2(t *testing.T) {
 
 	// assert
 	assert.NotNil(t, beane)
+}
+
+func Test_applicationContext_GetBean_beanHaveIntProperty(t *testing.T) {
+	// arrange
+	type myBean struct {
+		I int
+	}
+	beans := Beans(
+		Bean(myBean{}).ID("id_1").Property("I", 123),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	my, ok := bean.(*myBean)
+	require.True(t, ok)
+	assert.Equal(t, 123, my.I)
+}
+
+func Test_applicationContext_GetBean_beanHaveStringProperty(t *testing.T) {
+	// arrange
+	type myBean struct {
+		S string
+	}
+	beans := Beans(
+		Bean(myBean{}).ID("id_1").Property("S", "abc"),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	my, ok := bean.(*myBean)
+	require.True(t, ok)
+	assert.Equal(t, "abc", my.S)
+}
+
+func Test_applicationContext_GetBean_beanHaveStructProperty(t *testing.T) {
+	// arrange
+	type myBean struct {
+		S string
+	}
+	type yourBean struct {
+		B myBean
+	}
+	beans := Beans(
+		Bean(yourBean{}).ID("id_1").
+			Property("B", Bean(myBean{}).Property("S", "abc")),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	your, ok := bean.(*yourBean)
+	require.True(t, ok)
+	assert.Equal(t, "abc", your.B.S)
 }

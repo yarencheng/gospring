@@ -226,14 +226,20 @@ func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 
 func (ctx *applicationContext) getSingletonBean(bean BeanI) (*reflect.Value, error) {
 
-	if value, present := ctx.singletons[*bean.GetID()]; present {
-		return value, nil
+	if bean.GetID() != nil {
+		if value, present := ctx.singletons[*bean.GetID()]; present {
+			return value, nil
+		}
 	}
 
 	value, e := ctx.getPrototypeBean(bean)
 
 	if e != nil {
 		return nil, e
+	}
+
+	if bean.GetID() != nil {
+		ctx.singletons[*bean.GetID()] = value
 	}
 
 	return value, nil
@@ -263,8 +269,8 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 			factoryArgvValues[i] = argvValue.Elem()
 		} else {
 			return nil, fmt.Errorf("Parameter type of factory isn't [%v] nor [%v]",
-				factoryArgvValues[i].Type(),
-				factoryArgvValues[i].Elem().Type(),
+				fromType,
+				fromType.Elem(),
 			)
 		}
 
@@ -295,6 +301,37 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 		}
 		if e, ok := factoryReturns[1].Interface().(error); ok {
 			return nil, fmt.Errorf("Create bean [%v] failed. Caused by: %v", bean, e)
+		}
+	}
+
+	for name, ps := range bean.GetProperties() {
+		for _, p := range ps {
+
+			field := value.Elem().FieldByName(name)
+
+			pv, e := ctx.getBean(p)
+			if e != nil {
+				return nil, fmt.Errorf("Can't get bean [%v] need by field [%v]", p, name)
+			}
+
+			fromType := pv.Type()
+			toType := field.Type()
+
+			if fromType.ConvertibleTo(toType) {
+				field.Set(*pv)
+			} else if fromType.Elem().ConvertibleTo(toType) {
+				if Singleton == p.GetScope() {
+					return nil, fmt.Errorf("Can't inject a singleton to non-pointer filed [%v]", name)
+				}
+				field.Set(pv.Elem())
+			} else {
+				return nil, fmt.Errorf("Type of field [%v] isn't [%v] nor [%v]",
+					name,
+					fromType,
+					fromType.Elem(),
+				)
+			}
+
 		}
 	}
 

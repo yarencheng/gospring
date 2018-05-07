@@ -20,7 +20,7 @@ func Bean(tvpe interface{}) StructBeanI {
 		finalize:   &f,
 		scope:      Default,
 		factoryFn: func() interface{} {
-			return reflect.New(reflect.TypeOf(tvpe))
+			return reflect.New(reflect.TypeOf(tvpe)).Interface()
 		},
 	}
 }
