@@ -753,7 +753,7 @@ type Test_applicationContext_GetBean_withCostumeInitFunc_struct struct {
 	I int
 }
 
-func (s *Test_applicationContext_GetBean_withCostumeInitFunc_struct) Init() {
+func (s *Test_applicationContext_GetBean_withCostumeInitFunc_struct) Aaa() {
 	Test_applicationContext_GetBean_withCostumeInitFunc_isRun = true
 }
 
@@ -761,7 +761,7 @@ func Test_applicationContext_GetBean_withCostumeInitFunc(t *testing.T) {
 	// arrange
 	beans := Beans(
 		Bean(Test_applicationContext_GetBean_withCostumeInitFunc_struct{}).
-			ID("id_1"),
+			ID("id_1").Init("Aaa"),
 	)
 
 	// action
@@ -774,4 +774,60 @@ func Test_applicationContext_GetBean_withCostumeInitFunc(t *testing.T) {
 	_, ok := bean.(*Test_applicationContext_GetBean_withCostumeInitFunc_struct)
 	require.True(t, ok)
 	assert.True(t, Test_applicationContext_GetBean_withCostumeInitFunc_isRun)
+}
+
+var Test_applicationContext_Finalize_withDefaultFunction_isRun = false
+
+type Test_applicationContext_Finalize_withDefaultFunction_struct struct {
+	I int
+}
+
+func (s *Test_applicationContext_Finalize_withDefaultFunction_struct) Finalize() {
+	Test_applicationContext_Finalize_withDefaultFunction_isRun = true
+}
+
+func Test_applicationContext_Finalize_withDefaultFunction(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_applicationContext_Finalize_withDefaultFunction_struct{}).
+			ID("id_1"),
+	)
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	_, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// action
+	ctx.Finalize()
+
+	// assert
+	assert.True(t, Test_applicationContext_Finalize_withDefaultFunction_isRun)
+}
+
+var Test_applicationContext_Finalize_withCostumeFunction_isRun = false
+
+type Test_applicationContext_Finalize_withCostumeFunction_struct struct {
+	I int
+}
+
+func (s *Test_applicationContext_Finalize_withCostumeFunction_struct) Aaa() {
+	Test_applicationContext_Finalize_withCostumeFunction_isRun = true
+}
+
+func Test_applicationContext_Finalize_withCostumeFunction(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_applicationContext_Finalize_withCostumeFunction_struct{}).
+			ID("id_1").Finalize("Aaa"),
+	)
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	_, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// action
+	ctx.Finalize()
+
+	// assert
+	assert.True(t, Test_applicationContext_Finalize_withCostumeFunction_isRun)
 }

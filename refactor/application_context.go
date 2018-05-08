@@ -56,6 +56,14 @@ func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
 }
 
 func (ctx *applicationContext) Finalize() error {
+	for id, value := range ctx.singletons {
+		bean := ctx.beanById[id]
+		if e := ctx.callFinalizeFunc(*value, bean); e != nil {
+			return fmt.Errorf(
+				"Can't call finalize function of bean [%v]. Caused by: [%v]",
+				bean, e)
+		}
+	}
 	return nil
 }
 
@@ -430,6 +438,49 @@ func (ctx *applicationContext) callInitFunc(value reflect.Value, bean BeanI) err
 		return fmt.Errorf(
 			"Function [%v] returns %d unexpected value",
 			*initName,
+			len(rv),
+		)
+	}
+}
+
+func (ctx *applicationContext) callFinalizeFunc(value reflect.Value, bean BeanI) error {
+
+	finalName := bean.GetFinalize()
+	if finalName == nil {
+		s := DefaultFinalizeFunc
+		finalName = &s
+	}
+
+	finalFn, ok := value.Type().MethodByName(*finalName)
+	if !ok {
+		if bean.GetInit() != nil {
+			return fmt.Errorf("Can't get finalizer [%v]", *finalName)
+		}
+		return nil // donothing
+	}
+
+	rv := finalFn.Func.Call([]reflect.Value{value})
+	switch len(rv) {
+	case 0:
+		return nil
+	case 1:
+		if e, ok := rv[0].Interface().(error); ok {
+			return fmt.Errorf(
+				"Function [%v] return an error. Caused by: %v",
+				*finalName,
+				e,
+			)
+		} else {
+			return fmt.Errorf(
+				"Function [%v] returns 1 unexpected value [%v]",
+				*finalName,
+				rv[0].Interface(),
+			)
+		}
+	default:
+		return fmt.Errorf(
+			"Function [%v] returns %d unexpected value",
+			*finalName,
 			len(rv),
 		)
 	}
