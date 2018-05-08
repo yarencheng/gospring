@@ -11,13 +11,11 @@ func Ref(id string) ReferenceBeanI {
 }
 
 func Bean(tvpe interface{}) StructBeanI {
-	i := "Init"
-	f := "Finalize"
 	return &structBean{
 		tvpe:       reflect.TypeOf(tvpe),
 		properties: make(map[string][]BeanI),
-		init:       &i,
-		finalize:   &f,
+		init:       nil,
+		finalize:   nil,
 		scope:      Default,
 		factoryFn: func() interface{} {
 			return reflect.New(reflect.TypeOf(tvpe)).Interface()

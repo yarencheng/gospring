@@ -717,3 +717,61 @@ func Test_applicationContext_GetBean_beanHaveStructSliceProperty(t *testing.T) {
 		myBean{S: "ccc"},
 	}, your.B)
 }
+
+var Test_applicationContext_GetBean_withDefaultInitFunc_isRun = false
+
+type Test_applicationContext_GetBean_withDefaultInitFunc_struct struct {
+	I int
+}
+
+func (s *Test_applicationContext_GetBean_withDefaultInitFunc_struct) Init() {
+	Test_applicationContext_GetBean_withDefaultInitFunc_isRun = true
+}
+
+func Test_applicationContext_GetBean_withDefaultInitFunc(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_applicationContext_GetBean_withDefaultInitFunc_struct{}).
+			ID("id_1"),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	_, ok := bean.(*Test_applicationContext_GetBean_withDefaultInitFunc_struct)
+	require.True(t, ok)
+	assert.True(t, Test_applicationContext_GetBean_withDefaultInitFunc_isRun)
+}
+
+var Test_applicationContext_GetBean_withCostumeInitFunc_isRun = false
+
+type Test_applicationContext_GetBean_withCostumeInitFunc_struct struct {
+	I int
+}
+
+func (s *Test_applicationContext_GetBean_withCostumeInitFunc_struct) Init() {
+	Test_applicationContext_GetBean_withCostumeInitFunc_isRun = true
+}
+
+func Test_applicationContext_GetBean_withCostumeInitFunc(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_applicationContext_GetBean_withCostumeInitFunc_struct{}).
+			ID("id_1"),
+	)
+
+	// action
+	ctx, e1 := NewApplicationContext(beans...)
+	require.Nil(t, e1)
+	bean, e2 := ctx.GetBean("id_1")
+	require.Nil(t, e2)
+
+	// assert
+	_, ok := bean.(*Test_applicationContext_GetBean_withCostumeInitFunc_struct)
+	require.True(t, ok)
+	assert.True(t, Test_applicationContext_GetBean_withCostumeInitFunc_isRun)
+}

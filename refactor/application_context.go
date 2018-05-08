@@ -323,6 +323,10 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 
 	}
 
+	if e := ctx.callInitFunc(*value, bean); e != nil {
+		return nil, fmt.Errorf("Can't call initial function of bean [%v]. Caused by: [%v]", bean, e)
+	}
+
 	return value, nil
 }
 
@@ -386,4 +390,47 @@ func (ctx *applicationContext) injectSlice(field reflect.Value, beans ...BeanI) 
 	field.Set(slice)
 
 	return nil
+}
+
+func (ctx *applicationContext) callInitFunc(value reflect.Value, bean BeanI) error {
+
+	initName := bean.GetInit()
+	if initName == nil {
+		s := DefaultInitFunc
+		initName = &s
+	}
+
+	initFn, ok := value.Type().MethodByName(*initName)
+	if !ok {
+		if bean.GetInit() != nil {
+			return fmt.Errorf("Can't get initializer [%v]", *initName)
+		}
+		return nil // donothing
+	}
+
+	rv := initFn.Func.Call([]reflect.Value{value})
+	switch len(rv) {
+	case 0:
+		return nil
+	case 1:
+		if e, ok := rv[0].Interface().(error); ok {
+			return fmt.Errorf(
+				"Function [%v] return an error. Caused by: %v",
+				*initName,
+				e,
+			)
+		} else {
+			return fmt.Errorf(
+				"Function [%v] returns 1 unexpected value [%v]",
+				*initName,
+				rv[0].Interface(),
+			)
+		}
+	default:
+		return fmt.Errorf(
+			"Function [%v] returns %d unexpected value",
+			*initName,
+			len(rv),
+		)
+	}
 }

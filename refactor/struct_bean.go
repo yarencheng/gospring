@@ -2,6 +2,11 @@ package refactor
 
 import "reflect"
 
+const (
+	DefaultInitFunc     string = "Init"
+	DefaultFinalizeFunc string = "Finalize"
+)
+
 type structBean struct {
 	id          *string
 	tvpe        reflect.Type
