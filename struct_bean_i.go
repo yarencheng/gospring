@@ -1,4 +1,4 @@
-package refactor
+package gospring
 
 type StructBeanI interface {
 	Factory(fn interface{}, argv ...interface{}) StructBeanI

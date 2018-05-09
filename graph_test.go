@@ -1,4 +1,4 @@
-package refactor
+package gospring
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 
 func Test_isLoop_sameName(t *testing.T) {
 	// arrange
-	g := NewGraph()
+	g := newGraph()
 
 	// action
 	b := g.isLoop("a", "a")
@@ -19,7 +19,7 @@ func Test_isLoop_sameName(t *testing.T) {
 
 func Test_isLoop_parentNotExist(t *testing.T) {
 	// arrange
-	g := NewGraph()
+	g := newGraph()
 	g.AddDependency("a", "b")
 
 	// action
@@ -31,7 +31,7 @@ func Test_isLoop_parentNotExist(t *testing.T) {
 
 func Test_isLoop_childNotExist(t *testing.T) {
 	// arrange
-	g := NewGraph()
+	g := newGraph()
 	g.AddDependency("a", "b")
 
 	// action
@@ -44,7 +44,7 @@ func Test_isLoop_childNotExist(t *testing.T) {
 func Test_isLoop_loop(t *testing.T) {
 	// arrange
 	// a <- b <- c
-	g := NewGraph()
+	g := newGraph()
 	g.AddDependency("a", "b")
 	g.AddDependency("b", "c")
 
@@ -60,7 +60,7 @@ func Test_isLoop_noloop(t *testing.T) {
 	// arrange
 	// a <- b <- c
 	// d <- e <- f
-	g := NewGraph()
+	g := newGraph()
 	g.AddDependency("a", "b")
 	g.AddDependency("b", "c")
 	g.AddDependency("d", "e")
@@ -79,7 +79,7 @@ func Test_isLoop_noloop(t *testing.T) {
 
 func Test_AddDependency_loop(t *testing.T) {
 	// arrange
-	g := NewGraph()
+	g := newGraph()
 	g.AddDependency("a", "b")
 
 	// action
@@ -91,7 +91,7 @@ func Test_AddDependency_loop(t *testing.T) {
 
 func Test_AddDependency_parentAndChildNotExist(t *testing.T) {
 	// arrange
-	g := NewGraph()
+	g := newGraph()
 
 	// action
 	b := g.AddDependency("a", "b")
@@ -102,7 +102,7 @@ func Test_AddDependency_parentAndChildNotExist(t *testing.T) {
 
 func Test_AddDependency_parentAndChildExist(t *testing.T) {
 	// arrange
-	g := NewGraph()
+	g := newGraph()
 	g.AddDependency("a", "b")
 
 	// action

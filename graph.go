@@ -1,4 +1,4 @@
-package refactor
+package gospring
 
 type graph struct {
 	nodes map[string]*node
@@ -8,7 +8,7 @@ type node struct {
 	value   string
 }
 
-func NewGraph() *graph {
+func newGraph() *graph {
 	return &graph{
 		nodes: make(map[string]*node),
 	}

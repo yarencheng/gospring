@@ -1,4 +1,4 @@
-package refactor
+package gospring
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type applicationContext struct {
 func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 
 	ctx := applicationContext{
-		graph:         NewGraph(),
+		graph:         newGraph(),
 		beanById:      make(map[string]BeanI),
 		parentByChild: make(map[BeanI]BeanI),
 		singletons:    make(map[string]*reflect.Value),

@@ -1,4 +1,4 @@
-package refactor
+package gospring
 
 type ReferenceBeanI interface {
 	GetReference() BeanI

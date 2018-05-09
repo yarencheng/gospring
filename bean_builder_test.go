@@ -1,4 +1,4 @@
-package refactor
+package gospring
 
 import (
 	"testing"
