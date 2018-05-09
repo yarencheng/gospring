@@ -3,12 +3,10 @@ package refactor
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/yarencheng/gospring/refactor/dependency"
 )
 
 type applicationContext struct {
-	graph         *dependency.Graph
+	graph         *graph
 	beanById      map[string]BeanI
 	parentByChild map[BeanI]BeanI
 	singletons    map[string]*reflect.Value
@@ -17,7 +15,7 @@ type applicationContext struct {
 func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 
 	ctx := applicationContext{
-		graph:         dependency.NewGraph(),
+		graph:         NewGraph(),
 		beanById:      make(map[string]BeanI),
 		parentByChild: make(map[BeanI]BeanI),
 		singletons:    make(map[string]*reflect.Value),

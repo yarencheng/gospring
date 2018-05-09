@@ -1,27 +1,27 @@
-package dependency
+package refactor
 
-type Graph struct {
-	nodes map[string]*Node
+type graph struct {
+	nodes map[string]*node
 }
-type Node struct {
-	parents map[string]*Node
+type node struct {
+	parents map[string]*node
 	value   string
 }
 
-func NewGraph() *Graph {
-	return &Graph{
-		nodes: make(map[string]*Node),
+func NewGraph() *graph {
+	return &graph{
+		nodes: make(map[string]*node),
 	}
 }
 
-func NewNode(value string) *Node {
-	return &Node{
-		parents: make(map[string]*Node),
+func NewNode(value string) *node {
+	return &node{
+		parents: make(map[string]*node),
 		value:   value,
 	}
 }
 
-func (g *Graph) AddDependency(parent string, child string) (ok bool) {
+func (g *graph) AddDependency(parent string, child string) (ok bool) {
 
 	if g.isLoop(parent, child) {
 		return false
@@ -44,7 +44,7 @@ func (g *Graph) AddDependency(parent string, child string) (ok bool) {
 	return true
 }
 
-func (g *Graph) isLoop(parent string, child string) bool {
+func (g *graph) isLoop(parent string, child string) bool {
 
 	if parent == child {
 		return true

@@ -1,4 +1,4 @@
-package dependency
+package refactor
 
 import (
 	"testing"
