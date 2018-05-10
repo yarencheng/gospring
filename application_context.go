@@ -122,15 +122,8 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 		return fmt.Errorf("Factory is invalid. Caused by: %v", e)
 	}
 
-	switch bean.GetScope() {
-	case Default:
-	case Singleton:
-	case Prototype:
-		if bean.GetFinalize() != nil {
-			return fmt.Errorf("A prototype bean can't have finalizer [%v].", *bean.GetFinalize())
-		}
-	default:
-		return fmt.Errorf("Unkown scope [%v]", bean.GetScope())
+	if e := ctx.checkScope(bean); e != nil {
+		return fmt.Errorf("Scope is invalid. Caused by: %v", e)
 	}
 
 	for _, ps := range bean.GetProperties() {
@@ -178,6 +171,20 @@ func (ctx *applicationContext) checkType(bean BeanI) error {
 		if tvpe.Kind() == reflect.Ptr {
 			return fmt.Errorf("It can't be a pinter")
 		}
+	}
+	return nil
+}
+
+func (ctx *applicationContext) checkScope(bean BeanI) error {
+	switch bean.GetScope() {
+	case Default:
+	case Singleton:
+	case Prototype:
+		if bean.GetFinalize() != nil {
+			return fmt.Errorf("A prototype bean can't have finalizer. ")
+		}
+	default:
+		return fmt.Errorf("Unkown scope [%v]", bean.GetScope())
 	}
 	return nil
 }
