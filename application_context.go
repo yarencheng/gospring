@@ -267,60 +267,11 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 
 	factory, factoryArgvBeans := bean.GetFactory()
 	factoryV := reflect.ValueOf(factory)
-	factoryArgvValues := make([]reflect.Value, len(factoryArgvBeans))
-
-	for i, argvBean := range factoryArgvBeans {
-		argvValue, e := ctx.getBean(argvBean)
-		if e != nil {
-			return nil, fmt.Errorf("Create input bean [%v] for factory [%v] failed", argvBean, factory)
-		}
-		factoryArgvValues[i] = *argvValue
-
-		fromType := factoryArgvValues[i].Type()
-		toType := factoryV.Type().In(i)
-
-		if fromType.ConvertibleTo(toType) {
-			factoryArgvValues[i] = *argvValue
-		} else if fromType.Elem().ConvertibleTo(toType) {
-			if Singleton == argvBean.GetScope() {
-				return nil, fmt.Errorf("Can't inject a singleton to non-pointer filed")
-			}
-			factoryArgvValues[i] = argvValue.Elem()
-		} else {
-			return nil, fmt.Errorf("Parameter type of factory isn't [%v] nor [%v]",
-				fromType,
-				fromType.Elem(),
-			)
-		}
-
-	}
-
-	factoryReturns := factoryV.Call(factoryArgvValues)
-
-	for i, _ := range factoryReturns {
-		if factoryReturns[i].Type().Kind() == reflect.Interface {
-			factoryReturns[i] = factoryReturns[i].Elem()
-		}
-	}
 
 	var value *reflect.Value
-
-	switch len(factoryReturns) {
-	case 0:
-		return nil, fmt.Errorf("Factory function of bean [%v] returns nothing", bean)
-	case 1:
-		value = &factoryReturns[0]
-		if e, ok := value.Interface().(error); ok {
-			return nil, fmt.Errorf("Create bean [%v] failed. Caused by: %v", bean, e)
-		}
-	default:
-		value = &factoryReturns[0]
-		if e, ok := value.Interface().(error); ok {
-			return nil, fmt.Errorf("Create bean [%v] failed. Caused by: %v", bean, e)
-		}
-		if e, ok := factoryReturns[1].Interface().(error); ok {
-			return nil, fmt.Errorf("Create bean [%v] failed. Caused by: %v", bean, e)
-		}
+	var e error
+	if value, e = ctx.createBeanByFactory(factoryV, factoryArgvBeans); e != nil {
+		return nil, fmt.Errorf("Create bean failed. Cuased by: %v", e)
 	}
 
 	for name, ps := range bean.GetProperties() {
@@ -344,6 +295,67 @@ func (ctx *applicationContext) getPrototypeBean(bean BeanI) (*reflect.Value, err
 
 	if e := ctx.callInitFunc(*value, bean); e != nil {
 		return nil, fmt.Errorf("Can't call initial function of bean [%v]. Caused by: [%v]", bean, e)
+	}
+
+	return value, nil
+}
+
+func (ctx *applicationContext) createBeanByFactory(fn reflect.Value, argvs []BeanI) (*reflect.Value, error) {
+
+	values := make([]reflect.Value, len(argvs))
+
+	for i, argv := range argvs {
+		value, e := ctx.getBean(argv)
+		if e != nil {
+			return nil, fmt.Errorf("Can't get the [%d] argument from bean [%v]. Caused by: %v", i, argv, e)
+		}
+
+		fromType := value.Type()
+		toType := fn.Type().In(i)
+
+		if fromType.ConvertibleTo(toType) {
+			values[i] = *value
+		} else if fromType.Elem().ConvertibleTo(toType) {
+			if Singleton == argv.GetScope() {
+				return nil, fmt.Errorf("Can't inject a singleton to the [%d] non-pointer argument. ", i)
+			}
+			values[i] = value.Elem()
+		} else {
+			return nil, fmt.Errorf("The type of the [%d] argument isn't [%v] nor [%v]",
+				i,
+				fromType,
+				fromType.Elem(),
+			)
+		}
+
+	}
+
+	returns := fn.Call(values)
+
+	for i, _ := range returns {
+		if returns[i].Type().Kind() == reflect.Interface {
+			returns[i] = returns[i].Elem()
+		}
+	}
+
+	var value *reflect.Value
+
+	switch len(returns) {
+	case 0:
+		return nil, fmt.Errorf("Factory function returns nothing")
+	case 1:
+		value = &returns[0]
+		if e, ok := value.Interface().(error); ok {
+			return nil, fmt.Errorf("Get error from factory. Caused by: %v", e)
+		}
+	default:
+		value = &returns[0]
+		if e, ok := value.Interface().(error); ok {
+			return nil, fmt.Errorf("Get error from factory. Caused by: %v", e)
+		}
+		if e, ok := returns[1].Interface().(error); ok {
+			return nil, fmt.Errorf("Get error from factory. Caused by: %v", e)
+		}
 	}
 
 	return value, nil
