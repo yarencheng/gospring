@@ -327,7 +327,6 @@ func (ctx *applicationContext) createBeanByFactory(fn reflect.Value, argvs []Bea
 				fromType.Elem(),
 			)
 		}
-
 	}
 
 	returns := fn.Call(values)
