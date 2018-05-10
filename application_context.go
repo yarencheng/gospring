@@ -114,10 +114,8 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 		return e
 	}
 
-	if tvpe := bean.GetType(); tvpe != nil {
-		if tvpe.Kind() == reflect.Ptr {
-			return fmt.Errorf("Type of bean [%v] is a pointer instead of struct", bean)
-		}
+	if e := ctx.checkType(bean); e != nil {
+		return fmt.Errorf("Type is invalid. Caused by: %v", e)
 	}
 
 	if fn, argv := bean.GetFactory(); fn != nil {
@@ -209,6 +207,15 @@ func (ctx *applicationContext) addBeanById(bean BeanI) error {
 			return fmt.Errorf("ID [%v] already exist", *id)
 		}
 		ctx.beanById[*id] = bean
+	}
+	return nil
+}
+
+func (ctx *applicationContext) checkType(bean BeanI) error {
+	if tvpe := bean.GetType(); tvpe != nil {
+		if tvpe.Kind() == reflect.Ptr {
+			return fmt.Errorf("It can't be a pinter")
+		}
 	}
 	return nil
 }
