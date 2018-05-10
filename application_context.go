@@ -118,46 +118,8 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 		return fmt.Errorf("Type is invalid. Caused by: %v", e)
 	}
 
-	if fn, argv := bean.GetFactory(); fn != nil {
-		tvpe := reflect.TypeOf(fn)
-
-		if tvpe.Kind() != reflect.Func {
-			return fmt.Errorf("Factory of bean [%v] is not a function but a [%v]", bean, tvpe.Kind())
-		}
-
-		if len(argv) != tvpe.NumIn() {
-			return fmt.Errorf("Factory of bean [%v] need [%v] instead of [%v] parameters", bean, len(argv), tvpe.NumIn())
-		}
-
-		isPointer := func(ptr, strvct reflect.Type) bool {
-			switch ptr.Kind() {
-			case reflect.Interface:
-				return true
-			case reflect.Ptr:
-				return ptr.Elem() == strvct
-			default:
-				return false
-			}
-		}
-
-		switch tvpe.NumOut() {
-		case 1:
-			if !isPointer(tvpe.Out(0), bean.GetType()) {
-				return fmt.Errorf("The return type from factory function of bean [%v] is [%v] instead of [&%v]",
-					bean, tvpe.Out(0), bean.GetType())
-			}
-		case 2:
-			if !isPointer(tvpe.Out(0), bean.GetType()) {
-				return fmt.Errorf("The 1st return type from factory function of bean [%v] is [%v] instead of [&%v]",
-					bean, tvpe.Out(0), bean.GetType())
-			}
-			if tvpe.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
-				return fmt.Errorf("The 2nd return type from factory function of bean [%v] is [%v] instead of error",
-					bean, tvpe.Out(1))
-			}
-		default:
-			return fmt.Errorf("Factory of bean [%v] should return (interface{}) or (interface{},error)", bean)
-		}
+	if e := ctx.checkFactory(bean); e != nil {
+		return fmt.Errorf("Factory is invalid. Caused by: %v", e)
 	}
 
 	switch bean.GetScope() {
@@ -215,6 +177,51 @@ func (ctx *applicationContext) checkType(bean BeanI) error {
 	if tvpe := bean.GetType(); tvpe != nil {
 		if tvpe.Kind() == reflect.Ptr {
 			return fmt.Errorf("It can't be a pinter")
+		}
+	}
+	return nil
+}
+
+func (ctx *applicationContext) checkFactory(bean BeanI) error {
+	if fn, argv := bean.GetFactory(); fn != nil {
+		tvpe := reflect.TypeOf(fn)
+
+		if tvpe.Kind() != reflect.Func {
+			return fmt.Errorf("Factory is not a function but a [%v]", tvpe.Kind())
+		}
+
+		if len(argv) != tvpe.NumIn() {
+			return fmt.Errorf("Factory need [%v] instead of [%v] parameters", len(argv), tvpe.NumIn())
+		}
+
+		isPointer := func(ptr, strvct reflect.Type) bool {
+			switch ptr.Kind() {
+			case reflect.Interface:
+				return true
+			case reflect.Ptr:
+				return ptr.Elem() == strvct
+			default:
+				return false
+			}
+		}
+
+		switch tvpe.NumOut() {
+		case 1:
+			if !isPointer(tvpe.Out(0), bean.GetType()) {
+				return fmt.Errorf("The return type from factory function is [%v] instead of [&%v]",
+					tvpe.Out(0), bean.GetType())
+			}
+		case 2:
+			if !isPointer(tvpe.Out(0), bean.GetType()) {
+				return fmt.Errorf("The 1st return type from factory function is [%v] instead of [&%v]",
+					tvpe.Out(0), bean.GetType())
+			}
+			if tvpe.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
+				return fmt.Errorf("The 2nd return type from factory function is [%v] instead of error",
+					tvpe.Out(1))
+			}
+		default:
+			return fmt.Errorf("Factory should return (interface{}) or (interface{},error)")
 		}
 	}
 	return nil
