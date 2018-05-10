@@ -67,46 +67,40 @@ func (ctx *applicationContext) Finalize() error {
 
 func (ctx *applicationContext) setRefBean(parent BeanI) error {
 
+	// (key,value) = (bean,description)
+	bs := make(map[BeanI]string)
+
 	_, argvs := parent.GetFactory()
 	for i, argv := range argvs {
-		if _, ok := argv.(StructBeanI); ok {
-			if e := ctx.setRefBean(argv); e != nil {
-				return fmt.Errorf("Set reference bean in bean [%v] failed. Caused by: %v", argv, e)
+		bs[argv] = fmt.Sprintf("the number [%d] argument of factory function", i)
+	}
+
+	if sbean, ok := parent.(*structBean); ok {
+		for name, ps := range sbean.GetProperties() {
+			for _, p := range ps {
+				bs[p] = fmt.Sprintf("the field [%s]", name)
+			}
+		}
+	}
+
+	for bean, des := range bs {
+		if _, ok := bean.(StructBeanI); ok {
+			if e := ctx.setRefBean(bean); e != nil {
+				return fmt.Errorf("Replace reference beans for %s inside bean [%v] failed. Caused by: %v",
+					des, bean, e)
 			}
 			continue
 		}
-		if rbean, ok := argv.(ReferenceBeanI); ok {
-			if target, present := ctx.beanById[*argv.GetID()]; present {
+		if rbean, ok := bean.(ReferenceBeanI); ok {
+			if target, present := ctx.beanById[*bean.GetID()]; present {
 				rbean.SetReference(target)
 			} else {
-				return fmt.Errorf("Can find ID [%v] of [%d] factory parameter in bean [%v]", *argv.GetID(), i, parent)
+				return fmt.Errorf("Can find ID [%v] of [%v] inside bean [%v]",
+					*bean.GetID(), des, bean)
 			}
 		}
 	}
 
-	var sbean *structBean
-	var ok bool
-	if sbean, ok = parent.(*structBean); !ok {
-		return nil
-	}
-
-	for name, childs := range sbean.GetProperties() {
-		for _, child := range childs {
-			if _, ok := child.(StructBeanI); ok {
-				if e := ctx.setRefBean(child); e != nil {
-					return fmt.Errorf("Set reference bean in bean [%v] failed. Caused by: %v", child, e)
-				}
-				continue
-			}
-			if rbean, ok := child.(ReferenceBeanI); ok {
-				if target, present := ctx.beanById[*child.GetID()]; present {
-					rbean.SetReference(target)
-				} else {
-					return fmt.Errorf("Can find ID [%v] of property named [%v] in bean [%v]", *child.GetID(), name, parent)
-				}
-			}
-		}
-	}
 	return nil
 }
 
