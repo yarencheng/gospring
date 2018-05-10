@@ -110,11 +110,8 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 		return nil
 	}
 
-	if id := bean.GetID(); id != nil {
-		if _, present := ctx.beanById[*id]; present {
-			return fmt.Errorf("ID [%v] already exist", *id)
-		}
-		ctx.beanById[*id] = bean
+	if e := ctx.addBeanById(bean); e != nil {
+		return e
 	}
 
 	if tvpe := bean.GetType(); tvpe != nil {
@@ -203,6 +200,16 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 		}
 	}
 
+	return nil
+}
+
+func (ctx *applicationContext) addBeanById(bean BeanI) error {
+	if id := bean.GetID(); id != nil {
+		if _, present := ctx.beanById[*id]; present {
+			return fmt.Errorf("ID [%v] already exist", *id)
+		}
+		ctx.beanById[*id] = bean
+	}
 	return nil
 }
 
