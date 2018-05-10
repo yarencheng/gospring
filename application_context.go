@@ -9,7 +9,7 @@ type applicationContext struct {
 	graph         *graph
 	beanById      map[string]BeanI
 	parentByChild map[BeanI]BeanI
-	singletons    map[string]*reflect.Value
+	singletons    map[BeanI]*reflect.Value
 }
 
 func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
@@ -18,7 +18,7 @@ func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 		graph:         newGraph(),
 		beanById:      make(map[string]BeanI),
 		parentByChild: make(map[BeanI]BeanI),
-		singletons:    make(map[string]*reflect.Value),
+		singletons:    make(map[BeanI]*reflect.Value),
 	}
 
 	for _, bean := range beans {
@@ -54,8 +54,7 @@ func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
 }
 
 func (ctx *applicationContext) Finalize() error {
-	for id, value := range ctx.singletons {
-		bean := ctx.beanById[id]
+	for bean, value := range ctx.singletons {
 		if e := ctx.callFinalizeFunc(*value, bean); e != nil {
 			return fmt.Errorf(
 				"Can't call finalize function of bean [%v]. Caused by: [%v]",
@@ -238,11 +237,7 @@ func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 
 	switch bean.GetScope() {
 	case Singleton:
-		if bean.GetID() != nil {
-			return ctx.getSingletonBean(bean)
-		} else {
-			return ctx.getPrototypeBean(bean)
-		}
+		return ctx.getSingletonBean(bean)
 	case Prototype:
 		return ctx.getPrototypeBean(bean)
 	case Default:
@@ -254,10 +249,8 @@ func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 
 func (ctx *applicationContext) getSingletonBean(bean BeanI) (*reflect.Value, error) {
 
-	if bean.GetID() != nil {
-		if value, present := ctx.singletons[*bean.GetID()]; present {
-			return value, nil
-		}
+	if value, present := ctx.singletons[bean]; present {
+		return value, nil
 	}
 
 	value, e := ctx.getPrototypeBean(bean)
@@ -266,9 +259,7 @@ func (ctx *applicationContext) getSingletonBean(bean BeanI) (*reflect.Value, err
 		return nil, e
 	}
 
-	if bean.GetID() != nil {
-		ctx.singletons[*bean.GetID()] = value
-	}
+	ctx.singletons[bean] = value
 
 	return value, nil
 }
