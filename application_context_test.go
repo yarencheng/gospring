@@ -424,6 +424,31 @@ func Test_checkScope_prototypeCantHaveFinalizer(t *testing.T) {
 	require.NotNil(t, e)
 }
 
+func Test_checkScope_unknownScope(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	var scope Scope = "sss"
+
+	mock := new(BeanMock)
+	mock.On("GetScope").Return(scope)
+	mock.On("GetID").Return(nil)
+	mock.On("GetType").Return(reflect.TypeOf(beanStruct{}))
+	mock.On("GetFactory").Return(
+		func() *beanStruct { return nil },
+		[]BeanI{},
+	)
+
+	beans := Beans(
+		mock,
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
 func Test_checkFactory(t *testing.T) {
 	// arrange
 	type beanStruct struct{}
