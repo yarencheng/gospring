@@ -338,9 +338,12 @@ func Test_setRefBean_recursiveError(t *testing.T) {
 		B beanStruct2
 	}
 	beans := Beans(
-		Bean(beanStruct1{}).ID("id_1"),
-		Bean(beanStruct2{}).ID("id_2").Property("B", Ref("wrong_id")),
-		Bean(beanStruct3{}).ID("id_3").Property("B", Ref("id_2")),
+		Bean(beanStruct3{}).ID("id_3").
+			Property("B",
+				Bean(beanStruct2{}).
+					ID("id_2").
+					Property("B", Ref("wrong_id")),
+			),
 	)
 
 	// action
