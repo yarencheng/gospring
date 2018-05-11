@@ -115,6 +115,219 @@ func (m *ReferenceBeanMock) SetReference(b BeanI) {
 	m.Called(b)
 }
 
+func Test_GetBean(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).ID("id"),
+	)
+
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("id")
+
+	// assert
+	assert.NotNil(t, bean)
+}
+
+func Test_GetBean_invalidID(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).ID("id"),
+	)
+
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("invalidID")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+type Test_GetBean_error_struct struct {
+}
+
+func (*Test_GetBean_error_struct) Init() error {
+	return fmt.Errorf("")
+}
+
+func Test_GetBean_failedToCreateBean(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_GetBean_error_struct{}).ID("id"),
+	)
+
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("id")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+type Test_Finalize_struct struct {
+	b bool
+}
+
+func (s *Test_Finalize_struct) Finalize() {
+	s.b = false
+}
+
+func Test_Finalize(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_Finalize_struct{}).ID("id"),
+	)
+
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+	bean, e := ctx.GetBean("id")
+	require.Nil(t, e)
+
+	bean.(*Test_Finalize_struct).b = true
+
+	// action
+	ef := ctx.Finalize()
+	require.Nil(t, ef)
+
+	// assert
+	assert.False(t, bean.(*Test_Finalize_struct).b)
+}
+
+type Test_Finalize_error_struct struct {
+}
+
+func (s *Test_Finalize_error_struct) Finalize() error {
+	return fmt.Errorf("")
+}
+
+func Test_Finalize_error(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_Finalize_error_struct{}).ID("id"),
+	)
+
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+	_, eb := ctx.GetBean("id")
+	require.Nil(t, eb)
+
+	// action
+	ef := ctx.Finalize()
+
+	// assert
+	assert.NotNil(t, ef)
+}
+
+func Test_setRefBean_withProperty(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+		I int
+	}
+	type beanStruct2 struct {
+		B beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct1{}).ID("id_1").Property("I", 123),
+		Bean(beanStruct2{}).ID("id_2").Property("B", Ref("id_1")),
+	)
+
+	// action
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+	bean, e := ctx.GetBean("id_2")
+	require.Nil(t, e)
+
+	// assert
+	bean2, ok := bean.(*beanStruct2)
+	require.True(t, ok)
+	assert.Equal(t, 123, bean2.B.I)
+}
+
+func Test_setRefBean_withNotExistProperty(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+		I int
+	}
+	type beanStruct2 struct {
+		B beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct1{}).ID("id_1").Property("I", 123),
+		Bean(beanStruct2{}).ID("id_2").Property("B", Ref("id_aaa")),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_setRefBean_withFactory(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+		I int
+	}
+	type beanStruct2 struct {
+		B beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct1{}).ID("id_1").Property("I", 123),
+		Bean(beanStruct2{}).ID("id_2").Factory(func(s1 *beanStruct1) *beanStruct2 {
+			return &beanStruct2{
+				B: *s1,
+			}
+		}, Ref("id_1")),
+	)
+
+	// action
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+	bean, e := ctx.GetBean("id_2")
+	require.Nil(t, e)
+
+	// assert
+	bean2, ok := bean.(*beanStruct2)
+	require.True(t, ok)
+	assert.Equal(t, 123, bean2.B.I)
+}
+
+func Test_setRefBean_idNotExist(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+		I int
+	}
+	type beanStruct2 struct {
+		B beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct1{}).ID("id_1").Property("I", 123),
+		Bean(beanStruct2{}).ID("id_2").Factory(func(s1 *beanStruct1) *beanStruct2 {
+			return &beanStruct2{
+				B: *s1,
+			}
+		}, Ref("id_aaaa")),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
+//=========================
+
 func Test_NewApplicationContext_empty(t *testing.T) {
 	// arrange
 
