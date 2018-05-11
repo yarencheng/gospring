@@ -400,6 +400,149 @@ func Test_checkScope_prototypeCantHaveFinalizer(t *testing.T) {
 	require.NotNil(t, e)
 }
 
+func Test_checkFactory(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			func() *beanStruct {
+				return nil
+			},
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.Nil(t, e)
+}
+
+func Test_checkFactory_notFunction(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			"something else",
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
+func Test_checkFactory_tooManyArgument(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			func() *beanStruct {
+				return nil
+			},
+			"too many",
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
+func Test_checkFactory_returnNinPointer(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			func() beanStruct {
+				return beanStruct{}
+			},
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
+func Test_checkFactory_returnTwoValue(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			func() (*beanStruct, error) {
+				return nil, nil
+			},
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.Nil(t, e)
+}
+
+func Test_checkFactory_returnTwoValueAndNotPointer(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			func() (beanStruct, error) {
+				return beanStruct{}, nil
+			},
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
+func Test_checkFactory_returnTwoValueAndNoterror(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			func() (*beanStruct, interface{}) {
+				return nil, nil
+			},
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
+func Test_checkFactory_returnThreeValue(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Factory(
+			func() (*beanStruct, error, interface{}) {
+				return nil, nil, nil
+			},
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
 //=========================
 
 func Test_NewApplicationContext_empty(t *testing.T) {
