@@ -326,6 +326,30 @@ func Test_setRefBean_idNotExist(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
+func Test_setRefBean_recursiveError(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+		I int
+	}
+	type beanStruct2 struct {
+		B beanStruct1
+	}
+	type beanStruct3 struct {
+		B beanStruct2
+	}
+	beans := Beans(
+		Bean(beanStruct1{}).ID("id_1"),
+		Bean(beanStruct2{}).ID("id_2").Property("B", Ref("wrong_id")),
+		Bean(beanStruct3{}).ID("id_3").Property("B", Ref("id_2")),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
 func Test_addBeanById(t *testing.T) {
 	// arrange
 	type beanStruct struct{}
