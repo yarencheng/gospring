@@ -83,16 +83,15 @@ func (ctx *applicationContext) setRefBean(parent BeanI) error {
 	}
 
 	for bean, des := range bs {
-		if _, ok := bean.(StructBeanI); ok {
+		switch bean.(type) {
+		case StructBeanI:
 			if e := ctx.setRefBean(bean); e != nil {
 				return fmt.Errorf("Replace reference beans for %s inside bean [%v] failed. Caused by: %v",
 					des, bean, e)
 			}
-			continue
-		}
-		if rbean, ok := bean.(ReferenceBeanI); ok {
+		case ReferenceBeanI:
 			if target, present := ctx.beanById[*bean.GetID()]; present {
-				rbean.SetReference(target)
+				bean.(ReferenceBeanI).SetReference(target)
 			} else {
 				return fmt.Errorf("Can find ID [%v] of [%v] inside bean [%v]",
 					*bean.GetID(), des, bean)
