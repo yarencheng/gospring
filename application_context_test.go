@@ -323,6 +323,80 @@ func Test_setRefBean_idNotExist(t *testing.T) {
 	_, e := NewApplicationContext(beans...)
 
 	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_addBeanById(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).ID("id"),
+	)
+
+	// action
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// assert
+	actx, ok := ctx.(*applicationContext)
+	require.True(t, ok)
+	assert.Contains(t, actx.beanById, "id")
+}
+
+func Test_addBeanById_conflict(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).ID("id"),
+		Bean(beanStruct{}).ID("id"),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_checkType(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.Nil(t, e)
+}
+
+func Test_checkType_pointer(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(&beanStruct{}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.NotNil(t, e)
+}
+
+func Test_checkScope_prototypeCantHaveFinalizer(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Prototype().Finalize("aa"),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
 	require.NotNil(t, e)
 }
 
