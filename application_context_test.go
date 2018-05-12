@@ -619,6 +619,48 @@ func Test_addBean(t *testing.T) {
 	assert.Nil(t, e)
 }
 
+func Test_addBean_recursiveError(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		B interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).
+			ID("id").
+			Property(
+				"B",
+				Bean(beanStruct{}).
+					ID("id"),
+			),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_checkDependencyLoop_noPrentID(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		B interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).
+			Property(
+				"B",
+				Bean(beanStruct{}),
+			),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.Nil(t, e)
+}
+
 func Test_checkDependencyLoop_referenceLoop_1(t *testing.T) {
 	// arrange
 	type beanStruct1 struct {

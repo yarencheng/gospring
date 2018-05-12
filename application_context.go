@@ -157,7 +157,10 @@ func (ctx *applicationContext) checkDependencyLoop(bean BeanI) error {
 				}
 			}
 
-			parentID := parent.GetID()
+			var parentID *string
+			if parent != nil {
+				parentID = parent.GetID()
+			}
 			childID := p.GetID()
 
 			if parentID != nil && childID != nil {
