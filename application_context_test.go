@@ -1058,3 +1058,54 @@ func Test_inject_getBeanFailed(t *testing.T) {
 	assert.Nil(t, bean)
 	assert.NotNil(t, e)
 }
+
+func Test_inject_convertFailed(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I *beanStruct
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Property("I",
+			Bean(123).Factory(func() *int {
+				i := 123
+				return &i
+			}),
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+func Test_inject_singletonToElem(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+	}
+	type beanStruct2 struct {
+		I beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct2{}).ID("1").Property("I",
+			Bean(beanStruct1{}).
+				Singleton().
+				Factory(func() *beanStruct1 {
+					return &beanStruct1{}
+				}),
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
