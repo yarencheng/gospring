@@ -996,7 +996,7 @@ func Test_createBeanByFactory_convertArgvFailed(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
-func Test_createBeanByFactory_returnErrorAsFirstValue(t *testing.T) {
+func Test_createBeanByFactory_returnError(t *testing.T) {
 	// arrange
 	type beanStruct struct {
 		I interface{}
@@ -1017,7 +1017,7 @@ func Test_createBeanByFactory_returnErrorAsFirstValue(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
-func Test_createBeanByFactory_returnErrorAsSecondValue(t *testing.T) {
+func Test_createBeanByFactory_returnTwoValuesAndTheSecondIsError(t *testing.T) {
 	// arrange
 	type beanStruct struct {
 		I interface{}
