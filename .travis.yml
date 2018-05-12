@@ -5,7 +5,7 @@ go:
 
 install:
   - go get -u github.com/kardianos/govendor
-  - govendor sync
+  - govendor sync -v
 
 script:
   - go test -v .
