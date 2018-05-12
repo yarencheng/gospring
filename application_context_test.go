@@ -1110,7 +1110,7 @@ func Test_inject_singletonToElem(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
-func Test_inject_sinaaam(t *testing.T) {
+func Test_inject(t *testing.T) {
 	// arrange
 	type beanStruct1 struct {
 	}
@@ -1131,4 +1131,48 @@ func Test_inject_sinaaam(t *testing.T) {
 	// assert
 	assert.NotNil(t, bean)
 	assert.Nil(t, e)
+}
+
+func Test_injectSlice(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+	}
+	type beanStruct2 struct {
+		I []*beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct2{}).ID("1").Property("I",
+			Bean(beanStruct1{}),
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.NotNil(t, bean)
+	assert.Nil(t, e)
+}
+
+func Test_injectSlice_getBeanFailed(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I []interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Property("I",
+			Bean(beanStruct{}).Factory(func() error { return fmt.Errorf("") }),
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
 }
