@@ -619,7 +619,7 @@ func Test_addBean(t *testing.T) {
 	assert.Nil(t, e)
 }
 
-func Test_addBean_dependencyLoop(t *testing.T) {
+func Test_checkDependencyLoop_referenceLoop_1(t *testing.T) {
 	// arrange
 	type beanStruct1 struct {
 		B2 interface{}
@@ -639,7 +639,7 @@ func Test_addBean_dependencyLoop(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
-func Test_addBean_largeDependencyLoop_1(t *testing.T) {
+func Test_checkDependencyLoop_referenceLoop_2(t *testing.T) {
 	// arrange
 	type beanStruct struct {
 		B interface{}
@@ -647,14 +647,7 @@ func Test_addBean_largeDependencyLoop_1(t *testing.T) {
 	beans := Beans(
 		Bean(beanStruct{}).ID("1").Property("B", Ref("2")),
 		Bean(beanStruct{}).ID("2").Property("B", Ref("3")),
-		Bean(beanStruct{}).ID("3").Property("B", Ref("4")),
-		Bean(beanStruct{}).ID("4").Property("B", Ref("5")),
-		Bean(beanStruct{}).ID("5").Property("B", Ref("6")),
-		Bean(beanStruct{}).ID("6").Property("B", Ref("7")),
-		Bean(beanStruct{}).ID("7").Property("B", Ref("8")),
-		Bean(beanStruct{}).ID("8").Property("B", Ref("9")),
-		Bean(beanStruct{}).ID("9").Property("B", Ref("10")),
-		Bean(beanStruct{}).ID("10").Property("B", Ref("1")),
+		Bean(beanStruct{}).ID("3").Property("B", Ref("1")),
 	)
 
 	// action
@@ -664,7 +657,43 @@ func Test_addBean_largeDependencyLoop_1(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
-func Test_addBean_largeDependencyLoop_2(t *testing.T) {
+func Test_checkDependencyLoop_referenceLoop_3(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		B interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Property("B",
+			Ref("1")),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_checkDependencyLoop_referenceLoop_4(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		B interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Property("B",
+			Bean(beanStruct{}).Property("B",
+				Ref("1")),
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_checkDependencyLoop_referenceLoop_6(t *testing.T) {
 	// arrange
 	type beanStruct struct {
 		B interface{}
@@ -673,11 +702,7 @@ func Test_addBean_largeDependencyLoop_2(t *testing.T) {
 		Bean(beanStruct{}).ID("1").Property("B",
 			Bean(beanStruct{}).Property("B",
 				Bean(beanStruct{}).Property("B",
-					Bean(beanStruct{}).Property("B",
-						Bean(beanStruct{}).Property("B",
-							Ref("1")),
-					),
-				),
+					Ref("1")),
 			),
 		),
 	)
