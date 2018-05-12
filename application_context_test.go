@@ -1093,10 +1093,7 @@ func Test_inject_singletonToElem(t *testing.T) {
 	beans := Beans(
 		Bean(beanStruct2{}).ID("1").Property("I",
 			Bean(beanStruct1{}).
-				Singleton().
-				Factory(func() *beanStruct1 {
-					return &beanStruct1{}
-				}),
+				Singleton(),
 		),
 	)
 	ctx, e := NewApplicationContext(beans...)
@@ -1164,6 +1161,30 @@ func Test_injectSlice_getBeanFailed(t *testing.T) {
 	beans := Beans(
 		Bean(beanStruct{}).ID("1").Property("I",
 			Bean(beanStruct{}).Factory(func() error { return fmt.Errorf("") }),
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+func Test_injectSlice_singletonToElem(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+	}
+	type beanStruct2 struct {
+		I []beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct2{}).ID("1").Property("I",
+			Bean(beanStruct1{}).
+				Singleton(),
 		),
 	)
 	ctx, e := NewApplicationContext(beans...)
