@@ -1244,3 +1244,64 @@ func Test_callInitFunc(t *testing.T) {
 	// assert
 	assert.True(t, Test_callInitFunc_isCalled)
 }
+
+func Test_callInitFunc_cantFindMethod(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Init("aaa"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+type Test_callInitFunc_returnNonError_struct struct{}
+
+func (t *Test_callInitFunc_returnNonError_struct) Init() int {
+	return 123
+}
+
+func Test_callInitFunc_returnNonError(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_callInitFunc_returnNonError_struct{}).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+type Test_callInitFunc_returnMoreThanTwoValues_struct struct{}
+
+func (t *Test_callInitFunc_returnMoreThanTwoValues_struct) Init() (int, int) {
+	return 123, 123
+}
+
+func Test_callInitFunc_returnMoreThanTwoValues(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_callInitFunc_returnMoreThanTwoValues_struct{}).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
