@@ -818,3 +818,26 @@ func Test_GetBean_Property(t *testing.T) {
 		unsafe.Pointer(bean2.(*beanStruct)),
 	)
 }
+
+func Test_GetBean_factoryFail(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I int
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Factory(
+			func() (*beanStruct, error) {
+				return nil, fmt.Errorf("")
+			},
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
