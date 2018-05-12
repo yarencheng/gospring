@@ -497,7 +497,7 @@ func (ctx *applicationContext) callFinalizeFunc(value reflect.Value, bean BeanI)
 
 	finalFn, ok := value.Type().MethodByName(*finalName)
 	if !ok {
-		if bean.GetInit() != nil {
+		if bean.GetFinalize() != nil {
 			return fmt.Errorf("Can't get finalizer [%v]", *finalName)
 		}
 		return nil // donothing

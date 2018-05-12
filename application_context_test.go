@@ -1305,3 +1305,22 @@ func Test_callInitFunc_returnMoreThanTwoValues(t *testing.T) {
 	assert.Nil(t, bean)
 	assert.NotNil(t, e)
 }
+
+func Test_callFinalizeFunc_cantFindMethod(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Finalize("aaa"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+	bean, e := ctx.GetBean("1")
+	require.NotNil(t, bean)
+	require.Nil(t, e)
+
+	// action
+	e = ctx.Finalize()
+
+	// assert
+	assert.NotNil(t, e)
+}
