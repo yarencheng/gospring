@@ -1343,3 +1343,47 @@ func Test_callFinalizeFunc_notDefine(t *testing.T) {
 	// assert
 	assert.Nil(t, e)
 }
+
+type Test_callFinalizeFunc_returnNonError_struct struct{}
+
+func (t *Test_callFinalizeFunc_returnNonError_struct) Init() int {
+	return 123
+}
+
+func Test_callFinalizeFunc_returnNonError(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_callFinalizeFunc_returnNonError_struct{}).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+type Test_callFinalizeFunc_returnMoreThanTwoValues_struct struct{}
+
+func (t *Test_callFinalizeFunc_returnMoreThanTwoValues_struct) Init() (int, int) {
+	return 123, 123
+}
+
+func Test_callFinalizeFunc_returnMoreThanTwoValues(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_callFinalizeFunc_returnMoreThanTwoValues_struct{}).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
