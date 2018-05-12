@@ -881,3 +881,29 @@ func Test_GetBean_injectSliceFail(t *testing.T) {
 	assert.Nil(t, bean)
 	assert.NotNil(t, e)
 }
+
+func Test_createBeanByFactory_getArgvFailed(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Factory(
+			func(*beanStruct) *beanStruct { return &beanStruct{} },
+			Bean(beanStruct{}).Factory( // argv
+				func() (*beanStruct, error) {
+					return nil, fmt.Errorf("") // return error from factory
+				},
+			),
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
