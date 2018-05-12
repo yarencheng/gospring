@@ -413,6 +413,20 @@ func Test_checkType_pointer(t *testing.T) {
 	require.NotNil(t, e)
 }
 
+func Test_checkScope_singleton(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}).Singleton(),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	require.Nil(t, e)
+}
+
 func Test_checkScope_prototypeCantHaveFinalizer(t *testing.T) {
 	// arrange
 	type beanStruct struct{}
