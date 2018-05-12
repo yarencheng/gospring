@@ -861,3 +861,23 @@ func Test_GetBean_injectFail(t *testing.T) {
 	assert.Nil(t, bean)
 	assert.NotNil(t, e)
 }
+
+func Test_GetBean_injectSliceFail(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I []*int
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1"),
+		Bean(beanStruct{}).ID("2").Property("I", Ref("1")),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("2")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
