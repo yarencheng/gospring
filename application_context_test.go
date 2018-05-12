@@ -995,3 +995,45 @@ func Test_createBeanByFactory_convertArgvFailed(t *testing.T) {
 	assert.Nil(t, bean)
 	assert.NotNil(t, e)
 }
+
+func Test_createBeanByFactory_returnErrorAsFirstValue(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Factory(
+			func() error { return fmt.Errorf("") },
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
+
+func Test_createBeanByFactory_returnErrorAsSecondValue(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Factory(
+			func() (*beanStruct, error) { return nil, fmt.Errorf("") },
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.Nil(t, bean)
+	assert.NotNil(t, e)
+}
