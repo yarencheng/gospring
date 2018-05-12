@@ -1221,3 +1221,26 @@ func Test_injectSlice_prototypeToElem(t *testing.T) {
 	assert.NotNil(t, bean)
 	assert.Nil(t, e)
 }
+
+var Test_callInitFunc_isCalled = false
+
+type Test_callInitFunc_struct struct{}
+
+func (t *Test_callInitFunc_struct) Init() {
+	Test_callInitFunc_isCalled = true
+}
+
+func Test_callInitFunc(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_callInitFunc_struct{}).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	ctx.GetBean("1")
+
+	// assert
+	assert.True(t, Test_callInitFunc_isCalled)
+}
