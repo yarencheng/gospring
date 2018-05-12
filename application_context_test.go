@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -768,4 +769,52 @@ func Test_checkDependencyLoop_referenceLoop_6(t *testing.T) {
 
 	// assert
 	assert.NotNil(t, e)
+}
+
+func Test_GetBean_Singleton(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I int
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Singleton(),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean1, e := ctx.GetBean("1")
+	require.Nil(t, e)
+	bean2, e := ctx.GetBean("1")
+	require.Nil(t, e)
+
+	// assert
+	assert.Equal(t,
+		unsafe.Pointer(bean1.(*beanStruct)),
+		unsafe.Pointer(bean2.(*beanStruct)),
+	)
+}
+
+func Test_GetBean_Property(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I int
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Prototype(),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean1, e := ctx.GetBean("1")
+	require.Nil(t, e)
+	bean2, e := ctx.GetBean("1")
+	require.Nil(t, e)
+
+	// assert
+	assert.NotEqual(t,
+		unsafe.Pointer(bean1.(*beanStruct)),
+		unsafe.Pointer(bean2.(*beanStruct)),
+	)
 }
