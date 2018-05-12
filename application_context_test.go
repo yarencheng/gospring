@@ -1197,3 +1197,27 @@ func Test_injectSlice_singletonToElem(t *testing.T) {
 	assert.Nil(t, bean)
 	assert.NotNil(t, e)
 }
+
+func Test_injectSlice_prototypeToElem(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+	}
+	type beanStruct2 struct {
+		I []beanStruct1
+	}
+	beans := Beans(
+		Bean(beanStruct2{}).ID("1").Property("I",
+			Bean(beanStruct1{}).
+				Prototype(),
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.NotNil(t, bean)
+	assert.Nil(t, e)
+}
