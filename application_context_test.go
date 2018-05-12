@@ -604,3 +604,87 @@ func Test_NewApplicationContext_empty(t *testing.T) {
 	// assert
 	assert.Nil(t, e)
 }
+
+func Test_addBean(t *testing.T) {
+	// arrange
+	type beanStruct struct{}
+	beans := Beans(
+		Bean(beanStruct{}),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.Nil(t, e)
+}
+
+func Test_addBean_dependencyLoop(t *testing.T) {
+	// arrange
+	type beanStruct1 struct {
+		B2 interface{}
+	}
+	type beanStruct2 struct {
+		B1 interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct1{}).ID("id1").Property("B2", Ref("id2")),
+		Bean(beanStruct2{}).ID("id2").Property("B1", Ref("id1")),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_addBean_largeDependencyLoop_1(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		B interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Property("B", Ref("2")),
+		Bean(beanStruct{}).ID("2").Property("B", Ref("3")),
+		Bean(beanStruct{}).ID("3").Property("B", Ref("4")),
+		Bean(beanStruct{}).ID("4").Property("B", Ref("5")),
+		Bean(beanStruct{}).ID("5").Property("B", Ref("6")),
+		Bean(beanStruct{}).ID("6").Property("B", Ref("7")),
+		Bean(beanStruct{}).ID("7").Property("B", Ref("8")),
+		Bean(beanStruct{}).ID("8").Property("B", Ref("9")),
+		Bean(beanStruct{}).ID("9").Property("B", Ref("10")),
+		Bean(beanStruct{}).ID("10").Property("B", Ref("1")),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}
+
+func Test_addBean_largeDependencyLoop_2(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		B interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Property("B",
+			Bean(beanStruct{}).Property("B",
+				Bean(beanStruct{}).Property("B",
+					Bean(beanStruct{}).Property("B",
+						Bean(beanStruct{}).Property("B",
+							Ref("1")),
+					),
+				),
+			),
+		),
+	)
+
+	// action
+	_, e := NewApplicationContext(beans...)
+
+	// assert
+	assert.NotNil(t, e)
+}

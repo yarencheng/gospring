@@ -33,6 +33,12 @@ func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 		}
 	}
 
+	for _, bean := range beans {
+		if e := ctx.checkDependencyLoop(bean); e != nil {
+			return nil, fmt.Errorf("Detect dependency loop. Cuased by: %v", e)
+		}
+	}
+
 	return &ctx, nil
 }
 
@@ -126,17 +132,32 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 
 	for _, ps := range bean.GetProperties() {
 		for _, p := range ps {
+			if e := ctx.addBean(p); e != nil {
+				return fmt.Errorf("Can't add property bean [%v]. Cuased by: %v", p, e)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (ctx *applicationContext) checkDependencyLoop(bean BeanI) error {
+	for _, ps := range bean.GetProperties() {
+		for _, p := range ps {
 
 			ctx.parentByChild[p] = bean
 
-			parentID := bean.GetID()
-			for parentID == nil {
-				if parent, present := ctx.parentByChild[bean]; present {
-					parentID = parent.GetID()
+			parent := bean
+			for parent.GetID() == nil {
+				var present bool
+				if parent, present = ctx.parentByChild[parent]; present {
+					continue
+				} else {
 					break
 				}
 			}
 
+			parentID := parent.GetID()
 			childID := p.GetID()
 
 			if parentID != nil && childID != nil {
@@ -145,12 +166,11 @@ func (ctx *applicationContext) addBean(bean BeanI) error {
 				}
 			}
 
-			if e := ctx.addBean(p); e != nil {
-				return fmt.Errorf("Can't add property bean [%v]. Cuased by: %v", p, e)
+			if e := ctx.checkDependencyLoop(p); e != nil {
+				return fmt.Errorf("Detected dependency loop. Cuased by: %v", e)
 			}
 		}
 	}
-
 	return nil
 }
 
