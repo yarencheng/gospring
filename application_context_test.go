@@ -1245,6 +1245,28 @@ func Test_callInitFunc(t *testing.T) {
 	assert.True(t, Test_callInitFunc_isCalled)
 }
 
+type Test_callInitFunc_returnNilError_struct struct{}
+
+func (t *Test_callInitFunc_returnNilError_struct) Init() error {
+	return nil
+}
+
+func Test_callInitFunc_returnNilError(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_callInitFunc_returnNilError_struct{}).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.NotNil(t, bean)
+	assert.Nil(t, e)
+}
+
 func Test_callInitFunc_cantFindMethod(t *testing.T) {
 	// arrange
 	type beanStruct struct{}

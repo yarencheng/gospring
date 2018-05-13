@@ -465,17 +465,22 @@ func (ctx *applicationContext) callInitFunc(value reflect.Value, bean BeanI) err
 	case 0:
 		return nil
 	case 1:
-		if e, ok := rv[0].Interface().(error); ok {
-			return fmt.Errorf(
-				"Function [%v] return an error. Caused by: %v",
-				*initName,
-				e,
-			)
+		if rv[0].Type() == reflect.TypeOf((*error)(nil)).Elem() {
+			if rv[0].IsNil() {
+				return nil
+			} else {
+				return fmt.Errorf(
+					"Function [%v] return an error. Caused by: %v",
+					*initName,
+					rv[0].Interface(),
+				)
+			}
 		} else {
 			return fmt.Errorf(
-				"Function [%v] returns 1 unexpected value [%v]",
+				"Function [%v] returns 1 unexpected value [%v] with type [%v]. ",
 				*initName,
 				rv[0].Interface(),
+				rv[0].Type(),
 			)
 		}
 	default:
