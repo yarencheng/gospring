@@ -1366,6 +1366,30 @@ func Test_callFinalizeFunc_notDefine(t *testing.T) {
 	assert.Nil(t, e)
 }
 
+type Test_callFinalizeFunc_returnNilError_struct struct{}
+
+func (t *Test_callFinalizeFunc_returnNilError_struct) Finalize() error {
+	return nil
+}
+
+func Test_callFinalizeFunc_returnNilError(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_callFinalizeFunc_returnNilError_struct{}).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+	bean, e := ctx.GetBean("1")
+	require.NotNil(t, bean)
+	require.Nil(t, e)
+
+	// action
+	e = ctx.Finalize()
+
+	// assert
+	assert.Nil(t, e)
+}
+
 type Test_callFinalizeFunc_returnNonError_struct struct{}
 
 func (t *Test_callFinalizeFunc_returnNonError_struct) Finalize() int {
