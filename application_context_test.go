@@ -1017,6 +1017,27 @@ func Test_createBeanByFactory_returnError(t *testing.T) {
 	assert.NotNil(t, e)
 }
 
+func Test_createBeanByFactory_returnNilError(t *testing.T) {
+	// arrange
+	type beanStruct struct {
+		I interface{}
+	}
+	beans := Beans(
+		Bean(beanStruct{}).ID("1").Factory(
+			func() (*beanStruct, error) { return &beanStruct{}, nil },
+		),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.NotNil(t, bean)
+	assert.Nil(t, e)
+}
+
 func Test_createBeanByFactory_returnTwoValuesAndTheSecondIsError(t *testing.T) {
 	// arrange
 	type beanStruct struct {

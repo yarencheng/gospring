@@ -374,8 +374,10 @@ func (ctx *applicationContext) createBeanByFactory(fn reflect.Value, argvs []Bea
 		if e, ok := value.Interface().(error); ok {
 			return nil, fmt.Errorf("Get error from factory. Caused by: %v", e)
 		}
-		if e, ok := returns[1].Interface().(error); ok {
-			return nil, fmt.Errorf("Get error from factory. Caused by: %v", e)
+		if returns[1].IsValid() {
+			if e, ok := returns[1].Interface().(error); ok {
+				return nil, fmt.Errorf("Get error from factory. Caused by: %v", e)
+			}
 		}
 	}
 
