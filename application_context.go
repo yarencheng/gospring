@@ -402,10 +402,9 @@ func (ctx *applicationContext) inject(field reflect.Value, bean BeanI) error {
 		}
 		field.Set(pv.Elem())
 	} else {
-		return fmt.Errorf("Bean [%v] for field isn't [%v] nor [%v]",
+		return fmt.Errorf("Bean [%v] can't be convert to [%v]",
 			bean,
-			fromType,
-			fromType.Elem(),
+			toType,
 		)
 	}
 
@@ -433,10 +432,9 @@ func (ctx *applicationContext) injectSlice(field reflect.Value, beans ...BeanI) 
 			}
 			slice.Index(i).Set(pv.Elem())
 		} else {
-			return fmt.Errorf("Bean [%v] for field isn't [%v] nor [%v]",
+			return fmt.Errorf("Bean [%v] can't be convert to [%v]",
 				bean,
-				fromType,
-				fromType.Elem(),
+				toType,
 			)
 		}
 	}
