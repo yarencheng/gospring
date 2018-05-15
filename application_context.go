@@ -1,6 +1,7 @@
 package gospring
 
 import (
+	"container/list"
 	"fmt"
 	"reflect"
 )
@@ -10,15 +11,17 @@ type applicationContext struct {
 	beanById      map[string]BeanI
 	parentByChild map[BeanI]BeanI
 	singletons    map[BeanI]*reflect.Value
+	singletonList *list.List
 }
 
 func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
-
+	list.New()
 	ctx := applicationContext{
 		graph:         newGraph(),
 		beanById:      make(map[string]BeanI),
 		parentByChild: make(map[BeanI]BeanI),
 		singletons:    make(map[BeanI]*reflect.Value),
+		singletonList: list.New(),
 	}
 
 	for _, bean := range beans {
@@ -60,12 +63,16 @@ func (ctx *applicationContext) GetBean(id string) (interface{}, error) {
 }
 
 func (ctx *applicationContext) Finalize() error {
-	for bean, value := range ctx.singletons {
+	cur := ctx.singletonList.Back()
+	for cur != nil {
+		bean := cur.Value.(BeanI)
+		value := ctx.singletons[bean]
 		if e := ctx.callFinalizeFunc(*value, bean); e != nil {
 			return fmt.Errorf(
 				"Can't call finalize function of bean [%v]. Caused by: [%v]",
 				bean, e)
 		}
+		cur = cur.Prev()
 	}
 	return nil
 }
@@ -257,6 +264,10 @@ func (ctx *applicationContext) checkFactory(bean BeanI) error {
 
 func (ctx *applicationContext) getBean(bean BeanI) (*reflect.Value, error) {
 
+	if r, ok := bean.(ReferenceBeanI); ok {
+		return ctx.getBean(r.GetReference())
+	}
+
 	switch bean.GetScope() {
 	case Singleton:
 		return ctx.getSingletonBean(bean)
@@ -282,6 +293,7 @@ func (ctx *applicationContext) getSingletonBean(bean BeanI) (*reflect.Value, err
 	}
 
 	ctx.singletons[bean] = value
+	ctx.singletonList.PushBack(bean)
 
 	return value, nil
 }

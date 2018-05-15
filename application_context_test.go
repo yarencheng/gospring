@@ -204,6 +204,67 @@ func Test_Finalize(t *testing.T) {
 	assert.False(t, bean.(*Test_Finalize_struct).b)
 }
 
+var Test_Finalize_checkOrder_flag = 1
+
+type Test_Finalize_checkOrder_struct1 struct {
+	i int
+	V interface{}
+}
+type Test_Finalize_checkOrder_struct2 struct {
+	i int
+	V interface{}
+}
+type Test_Finalize_checkOrder_struct3 struct {
+	i int
+	V interface{}
+}
+
+func (s *Test_Finalize_checkOrder_struct1) Finalize() {
+	s.i = Test_Finalize_checkOrder_flag
+	Test_Finalize_checkOrder_flag++
+}
+
+func (s *Test_Finalize_checkOrder_struct2) Finalize() {
+	s.i = Test_Finalize_checkOrder_flag
+	Test_Finalize_checkOrder_flag++
+}
+
+func (s *Test_Finalize_checkOrder_struct3) Finalize() {
+	s.i = Test_Finalize_checkOrder_flag
+	Test_Finalize_checkOrder_flag++
+}
+
+func Test_Finalize_checkOrder(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(Test_Finalize_checkOrder_struct1{}).
+			ID("id_1").
+			Property("V", Ref("id_2")),
+		Bean(Test_Finalize_checkOrder_struct2{}).
+			ID("id_2"),
+		Bean(Test_Finalize_checkOrder_struct3{}).
+			ID("id_3"),
+	)
+
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+	bean1, e := ctx.GetBean("id_1")
+	require.Nil(t, e)
+	bean3, e := ctx.GetBean("id_3")
+	require.Nil(t, e)
+	bean2, e := ctx.GetBean("id_2")
+	require.Nil(t, e)
+
+	// action
+	ef := ctx.Finalize()
+	require.Nil(t, ef)
+
+	// assert
+	assert.Equal(t, 2, bean1.(*Test_Finalize_checkOrder_struct1).i)
+	assert.Equal(t, 3, bean2.(*Test_Finalize_checkOrder_struct2).i)
+	assert.Equal(t, 1, bean3.(*Test_Finalize_checkOrder_struct3).i)
+}
+
 type Test_Finalize_error_struct struct {
 }
 
