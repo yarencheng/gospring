@@ -1,4 +1,12 @@
-# How to define a bean
+# Bean
+
+Index
+
+* [Create a simple bean](#create-a-simple-bean)
+* [ID of beans](#ID)
+* [Scope](#scope)
+
+## aaaaa
 
 ## Create a simple bean
 
@@ -40,7 +48,7 @@
     ctx, e := NewApplicationContext(bs)
     ```
 
-## ID of beans
+## ID
 
 Bean can be difined with an ID or not. If a bean have an ID, it can be acquired by ```ApplicationContextI.GetBean("a_unique_id")```, or it can't. Please make sure each ID of beans is unique. A bean without ID is possible and is called local bean.
 
@@ -105,3 +113,52 @@ There are 2 type of scopes:
     bean1, _ := ctx.GetBean("id_1")
     bean2, _ := ctx.GetBean("id_1")
     ```
+
+## Type
+
+A minimal configration of a bean is its type. Type could be a native type, a struct, or a slice. A pointer type dose not allow.
+
+* Native type - OK
+
+    ```go
+    Bean(int(123))
+    Bean(int64(456))
+    Bean(float32(123.456))
+    Bean(string("hello gospring"))
+    ```
+* ```struct``` - OK
+
+    ```go
+    type Foo struct { ... }
+    Bean(Foo{})
+    ```
+
+    Be noticed that function ```Bean(type insterface{})``` is convenient comvention for gospring to know which **type of a struct** should be created. gospring dose not **copy** the value, so don't initialize the struct by ```Bean(type insterface{})```. Please use the ```(*BeanI) Factory(fninterface{})``` to do the initialization.
+
+    ```go
+    type Foo struct { Value int }
+
+    ctx, _ := NewApplicationContext(
+        Bean(Foo{ Value: 123 }).
+            ID("foo"),
+    )
+
+    bean, _ := ctx.GetBean("foo")
+    foo := bean.(*Foo)
+
+    if foo.Value == 0 { // true
+        ...
+    }
+    ```
+
+* slice - OK
+
+    ```go
+    Bean([]int)
+    Bean([]string)
+
+    type Foo struct { ... }
+    Bean([]Foo)
+    ```
+
+* ```map``` - not support
