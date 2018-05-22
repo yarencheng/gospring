@@ -10,6 +10,7 @@ const (
 type structBean struct {
 	id          *string
 	tvpe        reflect.Type
+	value       reflect.Value
 	properties  map[string][]BeanI
 	factoryFn   interface{}
 	factoryArgv []BeanI

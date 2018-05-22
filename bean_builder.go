@@ -10,15 +10,18 @@ func Ref(id string) ReferenceBeanI {
 	}
 }
 
-func Bean(tvpe interface{}) StructBeanI {
+func Bean(value interface{}) StructBeanI {
 	return &structBean{
-		tvpe:       reflect.TypeOf(tvpe),
+		tvpe:       reflect.TypeOf(value),
+		value:      reflect.ValueOf(value),
 		properties: make(map[string][]BeanI),
 		init:       nil,
 		finalize:   nil,
 		scope:      Default,
 		factoryFn: func() interface{} {
-			return reflect.New(reflect.TypeOf(tvpe)).Interface()
+			v := reflect.New(reflect.TypeOf(value))
+			v.Elem().Set(reflect.ValueOf(value))
+			return v.Interface()
 		},
 	}
 }
