@@ -172,7 +172,7 @@ func Test_GetBean_failedToCreateBean(t *testing.T) {
 
 	// assert
 	assert.Nil(t, bean)
-	assert.NotNil(t, e)
+	assert.NotNilf(t, e, "%v", e)
 }
 
 type Test_Finalize_struct struct {
@@ -830,6 +830,42 @@ func Test_checkDependencyLoop_referenceLoop_6(t *testing.T) {
 
 	// assert
 	assert.NotNil(t, e)
+}
+
+func Test_GetBean_int(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(int(123)).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+	require.Nil(t, e)
+
+	// assert
+	actual, ok := bean.(*int)
+	require.True(t, ok)
+	assert.Equal(t, int(123), *actual)
+}
+
+func Test_GetBean_string(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Bean(string("abcd")).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+	require.Nil(t, e)
+
+	// assert
+	actual, ok := bean.(*string)
+	require.True(t, ok)
+	assert.Equal(t, "abcd", *actual)
 }
 
 func Test_GetBean_Singleton(t *testing.T) {
