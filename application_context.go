@@ -229,12 +229,15 @@ func (ctx *applicationContext) checkFactory(bean BeanI) error {
 			return fmt.Errorf("Factory need [%v] instead of [%v] parameters", len(argv), tvpe.NumIn())
 		}
 
-		isPointer := func(ptr, strvct reflect.Type) bool {
-			switch ptr.Kind() {
+		isAssignable := func(return_, beant reflect.Type) bool {
+
+			switch return_.Kind() {
 			case reflect.Interface:
 				return true
 			case reflect.Ptr:
-				return ptr.Elem() == strvct
+				return return_.Elem() == beant
+			case reflect.Chan:
+				return beant.Kind() == reflect.Chan
 			default:
 				return false
 			}
@@ -242,12 +245,12 @@ func (ctx *applicationContext) checkFactory(bean BeanI) error {
 
 		switch tvpe.NumOut() {
 		case 1:
-			if !isPointer(tvpe.Out(0), bean.GetType()) {
+			if !isAssignable(tvpe.Out(0), bean.GetType()) {
 				return fmt.Errorf("The return type from factory function is [%v] instead of [&%v]",
 					tvpe.Out(0), bean.GetType())
 			}
 		case 2:
-			if !isPointer(tvpe.Out(0), bean.GetType()) {
+			if !isAssignable(tvpe.Out(0), bean.GetType()) {
 				return fmt.Errorf("The 1st return type from factory function is [%v] instead of [&%v]",
 					tvpe.Out(0), bean.GetType())
 			}

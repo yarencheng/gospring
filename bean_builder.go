@@ -52,3 +52,21 @@ func Beans(values ...interface{}) []BeanI {
 
 	return beans
 }
+
+func Chan(value interface{}, buffer int) StructBeanI {
+
+	c := reflect.ChanOf(reflect.BothDir, reflect.TypeOf(value))
+	dummy := reflect.MakeChan(c, 1)
+
+	return &structBean{
+		tvpe:       dummy.Type(),
+		properties: make(map[string][]BeanI),
+		init:       nil,
+		finalize:   nil,
+		scope:      Default,
+		factoryFn: func() interface{} {
+			v := reflect.MakeChan(c, buffer)
+			return v.Interface()
+		},
+	}
+}
