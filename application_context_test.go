@@ -1604,3 +1604,29 @@ func Test_GetBean_channelWithFactory(t *testing.T) {
 	c <- 456
 	assert.Equal(t, 456, <-c)
 }
+
+func Test_GetBean_withChannel(t *testing.T) {
+	// arrange
+	type myStruct struct {
+		C chan int
+	}
+	beans := Beans(
+		Bean(myStruct{}).
+			ID("1").
+			Property("C", Ref("2")),
+		Chan(int(123), 1).
+			ID("2"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+	require.Nil(t, e)
+	my, ok := bean.(*myStruct)
+	require.True(t, ok)
+
+	// assert - check channel is usable
+	my.C <- 456
+	assert.Equal(t, 456, <-my.C)
+}
