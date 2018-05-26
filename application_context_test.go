@@ -1555,3 +1555,52 @@ func Test_callFinalizeFunc_returnMoreThanTwoValues(t *testing.T) {
 	// assert
 	assert.NotNil(t, e)
 }
+
+func Test_GetBean_channel(t *testing.T) {
+	// arrange
+	beans := Beans(
+		Chan(int(123), 1).ID("1"),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.NotNil(t, bean)
+	assert.Nil(t, e)
+
+	// assert - check channel is usable
+	c := bean.(chan int)
+	c <- 456
+	assert.Equal(t, 456, <-c)
+}
+
+func Test_GetBean_channelWithFactory(t *testing.T) {
+	// arrange
+	isCalled := false
+	beans := Beans(
+		Chan(int(123), 1).
+			ID("1").
+			Factory(func() chan int {
+				isCalled = true
+				return make(chan int, 1)
+			}),
+	)
+	ctx, e := NewApplicationContext(beans...)
+	require.Nil(t, e)
+
+	// action
+	bean, e := ctx.GetBean("1")
+
+	// assert
+	assert.True(t, isCalled)
+	assert.NotNil(t, bean)
+	assert.Nil(t, e)
+
+	// assert - check channel is usable
+	c := bean.(chan int)
+	c <- 456
+	assert.Equal(t, 456, <-c)
+}
