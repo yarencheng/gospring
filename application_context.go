@@ -14,6 +14,15 @@ type applicationContext struct {
 	singletonList *list.List
 }
 
+// NewApplicationContext creates an ApplicationContextI object
+//
+// NewApplicationContext(
+//     Bean(...),
+//     Bean(...),
+// )
+//
+// It is a creation function to create an instance with the
+// interface ApplicationContextI
 func NewApplicationContext(beans ...BeanI) (ApplicationContextI, error) {
 	list.New()
 	ctx := applicationContext{
