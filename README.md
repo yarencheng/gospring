@@ -1,4 +1,4 @@
-# gospring [![Build Status](https://travis-ci.org/yarencheng/gospring.svg?branch=develop-v1.0)](https://travis-ci.org/yarencheng/gospring) [![codecov](https://codecov.io/gh/yarencheng/gospring/branch/develop-v1.0/graph/badge.svg)](https://codecov.io/gh/yarencheng/gospring) [![Go Report Card](https://goreportcard.com/badge/github.com/yarencheng/gospring)](https://goreportcard.com/report/github.com/yarencheng/gospring)
+# gospring [![Build Status](https://travis-ci.org/yarencheng/gospring.svg?branch=master)](https://travis-ci.org/yarencheng/gospring) [![codecov](https://codecov.io/gh/yarencheng/gospring/branch/master/graph/badge.svg)](https://codecov.io/gh/yarencheng/gospring) [![Go Report Card](https://goreportcard.com/badge/github.com/yarencheng/gospring)](https://goreportcard.com/report/github.com/yarencheng/gospring)
 A Go injection library inspired by Java Spring Framework.
 
 Java Spring Framework is a famous IoC framework. This library try to imitate spring's function.
