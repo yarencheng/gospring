@@ -21,3 +21,7 @@ func NewStructBeanV1(config v1.Bean) (*StructBean, error) {
 func (b *StructBean) GetID() string {
 	return b.id
 }
+
+func (b *StructBean) GetValue() (reflect.Value, error) {
+	return reflect.New(b.tvpe), nil
+}
