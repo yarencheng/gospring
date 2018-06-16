@@ -1,6 +1,7 @@
 package bean
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/yarencheng/gospring/v1"
@@ -12,6 +13,19 @@ type StructBean struct {
 }
 
 func NewStructBeanV1(config v1.Bean) (*StructBean, error) {
+
+	switch config.Type.Kind() {
+	case reflect.Uintptr |
+		reflect.Array |
+		reflect.Chan |
+		reflect.Func |
+		reflect.Interface |
+		reflect.Map |
+		reflect.Slice |
+		reflect.Ptr |
+		reflect.UnsafePointer:
+		return nil, fmt.Errorf("[%v] is not a valid type for a bean", config.Type.Kind())
+	}
 	return &StructBean{
 		id:   config.ID,
 		tvpe: config.Type,
