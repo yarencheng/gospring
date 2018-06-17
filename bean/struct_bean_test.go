@@ -1,6 +1,7 @@
 package bean
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -133,6 +134,36 @@ func Test_GetValue_withDefaultStartFn(t *testing.T) {
 
 	// assert
 	actual, ok := v.Interface().(*Test_GetValue_withDefaultStartFn_struct)
+	require.True(t, ok, "%v", v.Type())
+	assert.Equal(t, expected, actual)
+}
+
+type Test_GetValue_withDefaultStopFn_struct struct {
+	i int
+}
+
+func (s *Test_GetValue_withDefaultStopFn_struct) Start() {
+	s.i = 123
+}
+func Test_GetValue_withDefaultStopFn(t *testing.T) {
+	// arrange
+	expected := &Test_GetValue_withDefaultStopFn_struct{i: 123}
+	config := v1.Bean{
+		Type: reflect.TypeOf(Test_GetValue_withDefaultStopFn_struct{}),
+	}
+	bean, err := NewStructBeanV1(config)
+	require.NoError(t, err)
+
+	// arrange
+	v, err := bean.GetValue()
+	require.NoError(t, err)
+
+	// action
+	err = bean.Stop(context.Background())
+	require.NoError(t, err)
+
+	// assert
+	actual, ok := v.Interface().(*Test_GetValue_withDefaultStopFn_struct)
 	require.True(t, ok, "%v", v.Type())
 	assert.Equal(t, expected, actual)
 }

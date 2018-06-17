@@ -17,6 +17,7 @@ type StructBean struct {
 	factoryFn      reflect.Value
 	factoryArgs    []reflect.Value
 	startFn        reflect.Value
+	stopFn         reflect.Value
 }
 
 var defaultStruct StructBean = StructBean{
@@ -45,6 +46,10 @@ func NewStructBeanV1(config v1.Bean) (*StructBean, error) {
 	}
 
 	if err := bean.initStartFn(config); err != nil {
+		return nil, err
+	}
+
+	if err := bean.initStopFn(config); err != nil {
 		return nil, err
 	}
 
@@ -98,6 +103,46 @@ func (b *StructBean) GetValue() (reflect.Value, error) {
 	default:
 		return reflect.Value{}, fmt.Errorf("Unknown scope [%v]", b.scope)
 	}
+}
+
+func (b *StructBean) Stop(ctx context.Context) error {
+	if !b.stopFn.IsValid() {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	in := make([]reflect.Value, 1)
+	in[0] = reflect.ValueOf(b)
+	if b.stopFn.Type().NumIn() > 1 {
+		in = append(in, reflect.ValueOf(ctx))
+	}
+
+	done := make(chan int)
+	var err []reflect.Value
+
+	go func() {
+		err = b.stopFn.Call(in)
+		done <- 1
+	}()
+
+	select {
+	case <-ctx.Done():
+	case <-done:
+	}
+
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("StopFn [%v] timeout. err: %v",
+			b.stopFn.Type().Name(), err)
+	}
+
+	if len(err) > 0 && !err[0].IsNil() {
+		return fmt.Errorf("StopFn [%v] returned an error. err: %v",
+			b.stopFn.Type().Name(), err)
+	}
+
+	return nil
 }
 
 func (b *StructBean) createValue() (reflect.Value, error) {
@@ -260,6 +305,53 @@ func (b *StructBean) initStartFn(c v1.Bean) error {
 	case 0:
 	default:
 		return fmt.Errorf("Ony 0 or 1 return value for a start function")
+	}
+
+	return nil
+}
+
+func (b *StructBean) initStopFn(c v1.Bean) error {
+
+	if c.StopFn == nil {
+		ptrType := reflect.PtrTo(b.tvpe)
+		m, exist := ptrType.MethodByName("Stop")
+
+		if !exist {
+			return nil
+		}
+		b.stopFn = m.Func
+	} else if reflect.TypeOf(c.StopFn).Kind() == reflect.String {
+
+	} else if reflect.TypeOf(c.StopFn).Kind() == reflect.Func {
+
+	} else {
+		return fmt.Errorf("StopFn should be a func or a name of the func for [%v]", b.tvpe)
+	}
+
+	switch b.stopFn.Type().NumIn() {
+	case 2:
+		if b.stopFn.Type().In(1).AssignableTo(reflect.TypeOf((*context.Context)(nil)).Elem()) {
+			return fmt.Errorf("The 2nd argument of the stop func [%v] should be a context.Context", b.stopFn)
+		}
+		fallthrough
+	case 1:
+		if b.stopFn.Type().In(0).Kind() != reflect.Ptr ||
+			!b.stopFn.Type().In(0).Elem().AssignableTo(c.Type) {
+			return fmt.Errorf("The 1st argument of the stop func [%v] should be a context.Context", b.stopFn)
+		}
+	default:
+		return fmt.Errorf("Ony 1 or 2 argument for a stop function")
+	}
+
+	switch b.stopFn.Type().NumOut() {
+	case 1:
+		if b.stopFn.Type().In(0).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
+			return fmt.Errorf("The 1st return value of the stop func [%v] should be an error", b.stopFn)
+		}
+		fallthrough
+	case 0:
+	default:
+		return fmt.Errorf("Ony 0 or 1 return value for a stop function")
 	}
 
 	return nil

@@ -11,6 +11,7 @@ type Bean struct {
 	FactoryFn   interface{}
 	FactoryArgs []interface{}
 	StartFn     interface{}
+	StopFn      interface{}
 }
 
 func T(i interface{}) reflect.Type {
