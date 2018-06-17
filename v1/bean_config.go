@@ -5,9 +5,11 @@ import (
 )
 
 type Bean struct {
-	ID    string
-	Type  reflect.Type
-	Scope Scope
+	ID          string
+	Type        reflect.Type
+	Scope       Scope
+	FactoryFn   interface{}
+	FactoryArgs []interface{}
 }
 
 func T(i interface{}) reflect.Type {

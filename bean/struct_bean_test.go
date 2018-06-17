@@ -87,3 +87,26 @@ func Test_GetValue_defaultScope(t *testing.T) {
 	// assert
 	assert.Equal(t, v1.Pointer(), v2.Pointer())
 }
+
+func Test_GetValue_fromFactory(t *testing.T) {
+	// arrange
+	type testStruct struct{ i int }
+	expected := testStruct{i: 123}
+	config := v1.Bean{
+		Type: reflect.TypeOf(testStruct{}),
+		FactoryFn: func() testStruct {
+			return expected
+		},
+	}
+	bean, err := NewStructBeanV1(config)
+	require.NoError(t, err)
+
+	// action
+	v, err := bean.GetValue()
+	require.NoError(t, err)
+
+	// assert
+	actual, ok := v.Interface().(testStruct)
+	require.True(t, ok)
+	assert.Equal(t, expected, actual)
+}
