@@ -1,8 +1,10 @@
 package bean
 
 import (
+	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/yarencheng/gospring/v1"
 )
@@ -14,6 +16,7 @@ type StructBean struct {
 	singletonValue reflect.Value
 	factoryFn      reflect.Value
 	factoryArgs    []reflect.Value
+	startFn        reflect.Value
 }
 
 var defaultStruct StructBean = StructBean{
@@ -37,7 +40,11 @@ func NewStructBeanV1(config v1.Bean) (*StructBean, error) {
 		scope: scope,
 	}
 
-	if err := bean.initFactory(config); err != nil {
+	if err := bean.initFactoryFn(config); err != nil {
+		return nil, err
+	}
+
+	if err := bean.initStartFn(config); err != nil {
 		return nil, err
 	}
 
@@ -94,21 +101,58 @@ func (b *StructBean) GetValue() (reflect.Value, error) {
 }
 
 func (b *StructBean) createValue() (reflect.Value, error) {
+	var v reflect.Value
+
 	if !b.factoryFn.IsValid() {
-		return reflect.New(b.tvpe), nil
+		v = reflect.New(b.tvpe)
+	} else {
+		vs := b.factoryFn.Call(b.factoryArgs)
+
+		if len(vs) == 2 && !vs[1].IsNil() {
+			return reflect.Value{}, fmt.Errorf("Can't create instance from the factory function. err: %v",
+				vs[1].Interface())
+		}
+		v = vs[0]
 	}
 
-	vs := b.factoryFn.Call(b.factoryArgs)
+	if b.startFn.IsValid() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
 
-	if len(vs) == 2 && !vs[1].IsNil() {
-		return reflect.Value{}, fmt.Errorf("Can't create instance from the factory function. err: %v",
-			vs[1].Interface())
+		in := make([]reflect.Value, 1)
+		in[0] = v
+		if b.startFn.Type().NumIn() > 1 {
+			in = append(in, reflect.ValueOf(ctx))
+		}
+
+		done := make(chan int)
+		var err []reflect.Value
+
+		go func() {
+			err = b.startFn.Call(in)
+			done <- 1
+		}()
+
+		select {
+		case <-ctx.Done():
+		case <-done:
+		}
+
+		if err := ctx.Err(); err != nil {
+			return reflect.Value{}, fmt.Errorf("StartFn [%v] timeout. err: %v",
+				b.startFn.Type().Name(), err)
+		}
+
+		if len(err) > 0 && !err[0].IsNil() {
+			return reflect.Value{}, fmt.Errorf("StartFn [%v] returned an error. err: %v",
+				b.startFn.Type().Name(), err)
+		}
 	}
 
-	return vs[0], nil
+	return v, nil
 }
 
-func (b *StructBean) initFactory(c v1.Bean) error {
+func (b *StructBean) initFactoryFn(c v1.Bean) error {
 
 	if nil == c.FactoryFn {
 		return nil
@@ -136,7 +180,14 @@ func (b *StructBean) initFactory(c v1.Bean) error {
 		}
 		fallthrough
 	case 1:
-		if !b.factoryFn.Type().Out(0).AssignableTo(c.Type) {
+		if b.factoryFn.Type().Out(0).Kind() != reflect.Ptr {
+			return fmt.Errorf("The first return value [%v] of the factory [%v] is not a pointer for [%v]",
+				b.factoryFn.Type().Out(0),
+				b.factoryFn.Type(),
+				c.Type,
+			)
+		}
+		if !b.factoryFn.Type().Out(0).Elem().AssignableTo(c.Type) {
 			return fmt.Errorf("The first return value [%v] of the factory [%v] is not assignable to [%v]",
 				b.factoryFn.Type().Out(0),
 				b.factoryFn.Type(),
@@ -162,6 +213,53 @@ func (b *StructBean) initFactory(c v1.Bean) error {
 				b.factoryFn.Type(),
 				b.factoryArgs[i].Type())
 		}
+	}
+
+	return nil
+}
+
+func (b *StructBean) initStartFn(c v1.Bean) error {
+
+	if c.StartFn == nil {
+		ptrType := reflect.PtrTo(b.tvpe)
+		m, exist := ptrType.MethodByName("Start")
+
+		if !exist {
+			return nil
+		}
+		b.startFn = m.Func
+	} else if reflect.TypeOf(c.StartFn).Kind() == reflect.String {
+
+	} else if reflect.TypeOf(c.StartFn).Kind() == reflect.Func {
+
+	} else {
+		return fmt.Errorf("StartFn should be a func or a name of the func for [%v]", b.tvpe)
+	}
+
+	switch b.startFn.Type().NumIn() {
+	case 2:
+		if b.startFn.Type().In(1).AssignableTo(reflect.TypeOf((*context.Context)(nil)).Elem()) {
+			return fmt.Errorf("The 2nd argument of the start func [%v] should be a context.Context", b.startFn)
+		}
+		fallthrough
+	case 1:
+		if b.startFn.Type().In(0).Kind() != reflect.Ptr ||
+			!b.startFn.Type().In(0).Elem().AssignableTo(c.Type) {
+			return fmt.Errorf("The 1st argument of the start func [%v] should be a context.Context", b.startFn)
+		}
+	default:
+		return fmt.Errorf("Ony 1 or 2 argument for a start function")
+	}
+
+	switch b.startFn.Type().NumOut() {
+	case 1:
+		if b.startFn.Type().In(0).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
+			return fmt.Errorf("The 1st return value of the start func [%v] should be an error", b.startFn)
+		}
+		fallthrough
+	case 0:
+	default:
+		return fmt.Errorf("Ony 0 or 1 return value for a start function")
 	}
 
 	return nil

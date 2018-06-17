@@ -10,6 +10,7 @@ type Bean struct {
 	Scope       Scope
 	FactoryFn   interface{}
 	FactoryArgs []interface{}
+	StartFn     interface{}
 }
 
 func T(i interface{}) reflect.Type {
