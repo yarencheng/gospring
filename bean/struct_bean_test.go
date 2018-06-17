@@ -142,14 +142,15 @@ type Test_GetValue_withDefaultStopFn_struct struct {
 	i int
 }
 
-func (s *Test_GetValue_withDefaultStopFn_struct) Start() {
+func (s *Test_GetValue_withDefaultStopFn_struct) Stop() {
 	s.i = 123
 }
 func Test_GetValue_withDefaultStopFn(t *testing.T) {
 	// arrange
 	expected := &Test_GetValue_withDefaultStopFn_struct{i: 123}
 	config := v1.Bean{
-		Type: reflect.TypeOf(Test_GetValue_withDefaultStopFn_struct{}),
+		Type:  reflect.TypeOf(Test_GetValue_withDefaultStopFn_struct{}),
+		Scope: v1.Singleton,
 	}
 	bean, err := NewStructBeanV1(config)
 	require.NoError(t, err)

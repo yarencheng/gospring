@@ -106,15 +106,20 @@ func (b *StructBean) GetValue() (reflect.Value, error) {
 }
 
 func (b *StructBean) Stop(ctx context.Context) error {
+
 	if !b.stopFn.IsValid() {
 		return nil
+	}
+
+	if !b.singletonValue.IsValid() {
+		return fmt.Errorf("Can't stop a non singleton bean")
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
 	in := make([]reflect.Value, 1)
-	in[0] = reflect.ValueOf(b)
+	in[0] = b.singletonValue
 	if b.stopFn.Type().NumIn() > 1 {
 		in = append(in, reflect.ValueOf(ctx))
 	}
