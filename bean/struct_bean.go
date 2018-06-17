@@ -21,15 +21,23 @@ var defaultStruct StructBean = StructBean{
 func NewStructBeanV1(config v1.Bean) (*StructBean, error) {
 
 	switch config.Type.Kind() {
-	case reflect.Uintptr |
-		reflect.Array |
-		reflect.Chan |
-		reflect.Func |
-		reflect.Interface |
-		reflect.Map |
-		reflect.Slice |
-		reflect.Ptr |
-		reflect.UnsafePointer:
+	case reflect.Uintptr:
+		fallthrough
+	case reflect.Array:
+		fallthrough
+	case reflect.Chan:
+		fallthrough
+	case reflect.Func:
+		fallthrough
+	case reflect.Interface:
+		fallthrough
+	case reflect.Map:
+		fallthrough
+	case reflect.Slice:
+		fallthrough
+	case reflect.Ptr:
+		fallthrough
+	case reflect.UnsafePointer:
 		return nil, fmt.Errorf("[%v] is not a valid type for a bean", config.Type.Kind())
 	}
 

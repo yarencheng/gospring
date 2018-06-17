@@ -22,15 +22,16 @@ func Test_GetValue(t *testing.T) {
 	// arrange
 	type testStruct struct{}
 	bean := &StructBean{
-		tvpe: reflect.TypeOf(testStruct{}),
+		tvpe:  reflect.TypeOf(testStruct{}),
+		scope: v1.Default,
 	}
 
 	// action
 	v, err := bean.GetValue()
+	require.NoError(t, err)
 
 	// assert
 	assert.Exactly(t, v.Interface(), &testStruct{})
-	assert.NoError(t, err)
 }
 
 func Test_GetValue_prototype(t *testing.T) {
