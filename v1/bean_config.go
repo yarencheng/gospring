@@ -12,6 +12,12 @@ type Bean struct {
 	FactoryArgs []interface{}
 	StartFn     interface{}
 	StopFn      interface{}
+	Properties  []Property
+}
+
+type Property struct {
+	Name  string
+	Value interface{}
 }
 
 func T(i interface{}) reflect.Type {
