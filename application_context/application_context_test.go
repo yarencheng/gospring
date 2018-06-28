@@ -10,7 +10,7 @@ import (
 
 func Test_New_v1Bean(t *testing.T) {
 	// arrange
-	config := v1.Bean{
+	config := &v1.Bean{
 		ID:   "aa",
 		Type: reflect.TypeOf(""),
 	}

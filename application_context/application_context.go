@@ -29,13 +29,14 @@ func configsToBeans(configs ...interface{}) (*list.List, error) {
 	beans := list.New()
 	for _, config := range configs {
 		switch config.(type) {
-		case v1.Bean:
-			bean, err := bean.NewStructBeanV1(config.(v1.Bean))
+		case *v1.Bean:
+			cb := config.(*v1.Bean)
+			bean, err := bean.NewStructBeanV1(cb)
 			beans.PushBack(bean)
 			if err != nil {
 				return nil, err
 			}
-			for _, p := range config.(v1.Bean).Properties {
+			for _, p := range config.(*v1.Bean).Properties {
 				pBeans, err := configsToBeans(p.Value)
 				if err != nil {
 					return nil, err

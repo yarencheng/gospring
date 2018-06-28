@@ -24,7 +24,7 @@ var defaultStruct StructBean = StructBean{
 	scope: v1.Default,
 }
 
-func NewStructBeanV1(config v1.Bean) (*StructBean, error) {
+func NewStructBeanV1(config *v1.Bean) (*StructBean, error) {
 
 	if err := checkType(config.Type); err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func (b *StructBean) createValue() (reflect.Value, error) {
 	return v, nil
 }
 
-func (b *StructBean) initFactoryFn(c v1.Bean) error {
+func (b *StructBean) initFactoryFn(c *v1.Bean) error {
 
 	if nil == c.FactoryFn {
 		return nil
@@ -268,7 +268,7 @@ func (b *StructBean) initFactoryFn(c v1.Bean) error {
 	return nil
 }
 
-func (b *StructBean) initStartFn(c v1.Bean) error {
+func (b *StructBean) initStartFn(c *v1.Bean) error {
 
 	if c.StartFn == nil {
 		ptrType := reflect.PtrTo(b.tvpe)
@@ -315,7 +315,7 @@ func (b *StructBean) initStartFn(c v1.Bean) error {
 	return nil
 }
 
-func (b *StructBean) initStopFn(c v1.Bean) error {
+func (b *StructBean) initStopFn(c *v1.Bean) error {
 
 	if c.StopFn == nil {
 		ptrType := reflect.PtrTo(b.tvpe)
