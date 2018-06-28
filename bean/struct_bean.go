@@ -18,6 +18,7 @@ type StructBean struct {
 	factoryArgs    []reflect.Value
 	startFn        reflect.Value
 	stopFn         reflect.Value
+	properties     []v1.Property
 }
 
 var defaultStruct StructBean = StructBean{
@@ -36,9 +37,10 @@ func NewStructBeanV1(config *v1.Bean) (*StructBean, error) {
 	}
 
 	bean := &StructBean{
-		id:    config.ID,
-		tvpe:  config.Type,
-		scope: scope,
+		id:         config.ID,
+		tvpe:       config.Type,
+		scope:      scope,
+		properties: config.Properties,
 	}
 
 	if err := bean.initFactoryFn(config); err != nil {
