@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/yarencheng/gospring/interfaces"
+
 	uuid "github.com/satori/go.uuid"
 	"github.com/yarencheng/gospring/v1"
 )
@@ -21,13 +23,14 @@ type StructBean struct {
 	startFn        reflect.Value
 	stopFn         reflect.Value
 	properties     []v1.Property
+	ctx            interfaces.ApplicationContextI
 }
 
 var defaultStruct StructBean = StructBean{
 	scope: v1.Default,
 }
 
-func NewStructBeanV1(config *v1.Bean) (*StructBean, error) {
+func NewStructBeanV1(ctx interfaces.ApplicationContextI, config *v1.Bean) (*StructBean, error) {
 
 	if err := checkType(config.Type); err != nil {
 		return nil, err
@@ -44,6 +47,7 @@ func NewStructBeanV1(config *v1.Bean) (*StructBean, error) {
 		tvpe:       config.Type,
 		scope:      scope,
 		properties: config.Properties,
+		ctx:        ctx,
 	}
 
 	if err := bean.initFactoryFn(config); err != nil {

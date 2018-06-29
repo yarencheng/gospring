@@ -1,4 +1,4 @@
-package bean
+package interfaces
 
 import (
 	"context"

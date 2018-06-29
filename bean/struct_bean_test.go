@@ -12,7 +12,7 @@ import (
 
 func Test_NewStructBeanV1_checkDefaultValue(t *testing.T) {
 	// action
-	bean, err := NewStructBeanV1(&v1.Bean{Type: reflect.TypeOf("")})
+	bean, err := NewStructBeanV1(nil, &v1.Bean{Type: reflect.TypeOf("")})
 	require.NoError(t, err)
 
 	// assert
@@ -99,7 +99,7 @@ func Test_GetValue_fromFactory(t *testing.T) {
 			return expected
 		},
 	}
-	bean, err := NewStructBeanV1(config)
+	bean, err := NewStructBeanV1(nil, config)
 	require.NoError(t, err)
 
 	// action
@@ -125,7 +125,7 @@ func Test_GetValue_withDefaultStartFn(t *testing.T) {
 	config := &v1.Bean{
 		Type: reflect.TypeOf(Test_GetValue_withDefaultStartFn_struct{}),
 	}
-	bean, err := NewStructBeanV1(config)
+	bean, err := NewStructBeanV1(nil, config)
 	require.NoError(t, err)
 
 	// action
@@ -152,7 +152,7 @@ func Test_GetValue_withDefaultStopFn(t *testing.T) {
 		Type:  reflect.TypeOf(Test_GetValue_withDefaultStopFn_struct{}),
 		Scope: v1.Singleton,
 	}
-	bean, err := NewStructBeanV1(config)
+	bean, err := NewStructBeanV1(nil, config)
 	require.NoError(t, err)
 
 	// arrange
