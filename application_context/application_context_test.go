@@ -72,3 +72,72 @@ func Test_GetByID(t *testing.T) {
 		assert.IsType(t, data.expectedType, bean)
 	}
 }
+
+func Test_GetByID_withProperty(t *testing.T) {
+	// arrange
+	type StructInt struct {
+		Value *int
+	}
+	type StructString struct {
+		Value *string
+	}
+	datas := []struct {
+		configs []interface{}
+		isNil   interface{}
+	}{
+		{
+			configs: []interface{}{&v1.Bean{
+				ID:   "a_id",
+				Type: reflect.TypeOf(StructInt{}),
+			}},
+			isNil: true,
+		}, {
+			configs: []interface{}{&v1.Bean{
+				ID:   "a_id",
+				Type: reflect.TypeOf(StructInt{}),
+				Properties: []v1.Property{
+					{
+						Name: "Value",
+						Config: &v1.Bean{
+							Type: reflect.TypeOf(123),
+						},
+					},
+				},
+			}},
+			isNil: false,
+		}, {
+			configs: []interface{}{&v1.Bean{
+				ID:   "a_id",
+				Type: reflect.TypeOf(StructString{}),
+			}},
+			isNil: true,
+		}, {
+			configs: []interface{}{&v1.Bean{
+				ID:   "a_id",
+				Type: reflect.TypeOf(StructString{}),
+				Properties: []v1.Property{
+					{
+						Name: "Value",
+						Config: &v1.Bean{
+							Type: reflect.TypeOf(""),
+						},
+					},
+				},
+			}},
+			isNil: false,
+		},
+	}
+
+	for _, data := range datas {
+		ctx, err := New(data.configs...)
+		require.NoError(t, err)
+
+		// action
+		bean, err := ctx.GetByID("a_id")
+
+		// assert
+		assert.NoError(t, err)
+		actualField := reflect.ValueOf(bean).Elem().FieldByName("Value")
+		assert.Equal(t, data.isNil, actualField.IsNil())
+	}
+}

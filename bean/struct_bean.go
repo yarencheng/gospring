@@ -22,7 +22,7 @@ type StructBean struct {
 	factoryArgs    []reflect.Value
 	startFn        reflect.Value
 	stopFn         reflect.Value
-	properties     map[uuid.UUID]interfaces.BeanI
+	properties     map[string]uuid.UUID
 	ctx            interfaces.ApplicationContextI
 }
 
@@ -46,7 +46,7 @@ func NewStructBeanV1(ctx interfaces.ApplicationContextI, config *v1.Bean) (*Stru
 		id:         config.ID,
 		tvpe:       config.Type,
 		scope:      scope,
-		properties: make(map[uuid.UUID]interfaces.BeanI),
+		properties: make(map[string]uuid.UUID),
 		ctx:        ctx,
 	}
 
@@ -55,7 +55,7 @@ func NewStructBeanV1(ctx interfaces.ApplicationContextI, config *v1.Bean) (*Stru
 		if err != nil {
 			return nil, fmt.Errorf("Add config [%#v] of property [%v] failed. err: [%v]", p.Config, p.Name, err)
 		}
-		bean.properties[b.GetUUID()] = b
+		bean.properties[p.Name] = b.GetUUID()
 	}
 
 	if err := bean.initFactoryFn(config); err != nil {
@@ -186,12 +186,30 @@ func (b *StructBean) createValue() (reflect.Value, error) {
 		v = vs[0]
 	}
 
-	// for _, p := range b.properties {
-	// 	v := v.FieldByName(p.Name)
-	// 	if v.IsValid() {
-	// 		return reflect.Value{}, fmt.Errorf("Field [%v] is not found", p.Name)
-	// 	}
-	// }
+	for name, uuid := range b.properties {
+		pb, ok := b.ctx.GetBeanByUUID(uuid)
+		if !ok {
+			return reflect.Value{}, fmt.Errorf("Bean with UUID [%v] dose not exist", uuid)
+		}
+
+		fv := v.Elem().FieldByName(name)
+		if !fv.IsValid() {
+			return reflect.Value{}, fmt.Errorf("Field [%v] is not found", name)
+		}
+
+		pbv, err := pb.GetValue()
+		if err != nil {
+			return reflect.Value{}, fmt.Errorf("Get value from bean [uuid=%v] failed", uuid)
+		}
+
+		if pbv.Type().AssignableTo(fv.Type()) {
+			fv.Set(pbv)
+		} else if pbv.Type().AssignableTo(reflect.PtrTo(fv.Type())) {
+			fv.Set(pbv.Elem())
+		} else {
+			return reflect.Value{}, fmt.Errorf("Can't assign [%v] to [%v]", pbv.Type(), fv.Type())
+		}
+	}
 
 	if b.startFn.IsValid() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
