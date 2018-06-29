@@ -15,6 +15,14 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
+			"checksumSHA1": "+nVM+CEZGAopOrYlLifgWP+X01E=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3",
+			"revisionTime": "2018-01-03T03:42:45Z",
+			"version": "v1",
+			"versionExact": "v1.2.0"
+		},
+		{
 			"checksumSHA1": "n+vQ7Bmp+ODWGmCp8cI5MFsaZVA=",
 			"path": "github.com/stretchr/objx",
 			"revision": "a5cfa15c000af5f09784e5355969ba7eb66ef0de",

@@ -6,10 +6,12 @@ import (
 	"reflect"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/yarencheng/gospring/v1"
 )
 
 type StructBean struct {
+	uuid           uuid.UUID
 	id             string
 	tvpe           reflect.Type
 	scope          v1.Scope
@@ -37,6 +39,7 @@ func NewStructBeanV1(config *v1.Bean) (*StructBean, error) {
 	}
 
 	bean := &StructBean{
+		uuid:       uuid.NewV4(),
 		id:         config.ID,
 		tvpe:       config.Type,
 		scope:      scope,
@@ -80,6 +83,10 @@ func checkType(tvpe reflect.Type) error {
 		return fmt.Errorf("[%v] is not a valid type for a bean", tvpe.Kind())
 	}
 	return nil
+}
+
+func (b *StructBean) GetUUID() uuid.UUID {
+	return b.uuid
 }
 
 func (b *StructBean) GetID() string {
