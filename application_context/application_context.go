@@ -50,6 +50,24 @@ func configsToBeans(configs ...interface{}) (*list.List, error) {
 	return beans, nil
 }
 
-func (c *ApplicationContext) GetByID(id string) interface{} {
-	return nil
+func (c *ApplicationContext) GetByID(id string) (interface{}, error) {
+
+	if len(id) == 0 {
+		return nil, fmt.Errorf("id is empty")
+	}
+
+	for e := c.beans.Front(); e != nil; e = e.Next() {
+
+		if b, ok := e.Value.(bean.BeanI); !ok {
+			return nil, fmt.Errorf("[%v] is not a bean.BeanI", reflect.TypeOf(e.Value))
+		} else if id == b.GetID() {
+			v, err := b.GetValue()
+			if err != nil {
+				return nil, err
+			}
+			return v.Interface(), nil
+		}
+	}
+
+	return nil, fmt.Errorf("ID [%v] dose not exist", id)
 }
