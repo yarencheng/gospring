@@ -22,7 +22,7 @@ type StructBean struct {
 	factoryArgs    []reflect.Value
 	startFn        reflect.Value
 	stopFn         reflect.Value
-	properties     []v1.Property
+	properties     map[uuid.UUID]interfaces.BeanI
 	ctx            interfaces.ApplicationContextI
 }
 
@@ -46,8 +46,16 @@ func NewStructBeanV1(ctx interfaces.ApplicationContextI, config *v1.Bean) (*Stru
 		id:         config.ID,
 		tvpe:       config.Type,
 		scope:      scope,
-		properties: config.Properties,
+		properties: make(map[uuid.UUID]interfaces.BeanI),
 		ctx:        ctx,
+	}
+
+	for _, p := range config.Properties {
+		b, err := ctx.AddConfig(p.Value)
+		if err != nil {
+			return nil, fmt.Errorf("Add config [%#v] of property [%v] failed. err: [%v]", p.Value, p.Name, err)
+		}
+		bean.properties[b.GetUUID()] = b
 	}
 
 	if err := bean.initFactoryFn(config); err != nil {
@@ -177,6 +185,13 @@ func (b *StructBean) createValue() (reflect.Value, error) {
 		}
 		v = vs[0]
 	}
+
+	// for _, p := range b.properties {
+	// 	v := v.FieldByName(p.Name)
+	// 	if v.IsValid() {
+	// 		return reflect.Value{}, fmt.Errorf("Field [%v] is not found", p.Name)
+	// 	}
+	// }
 
 	if b.startFn.IsValid() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
