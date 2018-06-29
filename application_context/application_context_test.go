@@ -49,7 +49,7 @@ func Test_GetByID(t *testing.T) {
 				Properties: []v1.Property{
 					{
 						Name: "",
-						Value: &v1.Bean{
+						Config: &v1.Bean{
 							ID:   "a_id",
 							Type: reflect.TypeOf(true),
 						},

@@ -16,8 +16,8 @@ type Bean struct {
 }
 
 type Property struct {
-	Name  string
-	Value interface{}
+	Name   string
+	Config interface{}
 }
 
 func T(i interface{}) reflect.Type {

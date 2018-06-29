@@ -51,9 +51,9 @@ func NewStructBeanV1(ctx interfaces.ApplicationContextI, config *v1.Bean) (*Stru
 	}
 
 	for _, p := range config.Properties {
-		b, err := ctx.AddConfig(p.Value)
+		b, err := ctx.AddConfig(p.Config)
 		if err != nil {
-			return nil, fmt.Errorf("Add config [%#v] of property [%v] failed. err: [%v]", p.Value, p.Name, err)
+			return nil, fmt.Errorf("Add config [%#v] of property [%v] failed. err: [%v]", p.Config, p.Name, err)
 		}
 		bean.properties[b.GetUUID()] = b
 	}
