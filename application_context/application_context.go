@@ -2,8 +2,10 @@ package application_context
 
 import (
 	"container/list"
+	"context"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/yarencheng/gospring/bean"
 	"github.com/yarencheng/gospring/v1"
@@ -144,4 +146,38 @@ func (c *ApplicationContext) GetBeanByUUID(id uuid.UUID) (interfaces.BeanI, bool
 	}
 
 	return bean, true
+}
+
+func (c *ApplicationContext) Stop(ctx context.Context) error {
+
+	wg := sync.WaitGroup{}
+	wg.Add(c.beans.Len())
+
+	for e := c.beans.Front(); e != nil; e = e.Next() {
+		v, ok := e.Value.(interfaces.BeanI)
+		if ok {
+			return fmt.Errorf("Can't convert [%v] to type interfaces.BeanI", v)
+		}
+		go func() {
+			err := v.Stop(ctx)
+			if err != nil {
+				// TODO: logger
+				fmt.Printf("Stop [%v] failed. err: [%v]", v, err)
+			}
+			wg.Done()
+		}()
+	}
+
+	wait := make(chan int)
+	go func() {
+		wg.Wait()
+		wait <- 1
+	}()
+
+	select {
+	case <-ctx.Done():
+	case <-wait:
+	}
+
+	return ctx.Err()
 }
