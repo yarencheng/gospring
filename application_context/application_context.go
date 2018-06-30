@@ -1,8 +1,10 @@
 package application_context
 
 import (
+	"bytes"
 	"container/list"
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -150,6 +152,9 @@ func (c *ApplicationContext) GetBeanByUUID(id uuid.UUID) (interfaces.BeanI, bool
 
 func (c *ApplicationContext) Stop(ctx context.Context) error {
 
+	errsLock := sync.Mutex{}
+	errs := list.New()
+
 	wg := sync.WaitGroup{}
 	wg.Add(c.beans.Len())
 
@@ -161,8 +166,9 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 		go func() {
 			err := v.Stop(ctx)
 			if err != nil {
-				// TODO: logger
-				fmt.Printf("Stop [%v] failed. err: [%v]", v, err)
+				errsLock.Lock()
+				defer errsLock.Unlock()
+				errs.PushBack(err)
 			}
 			wg.Done()
 		}()
@@ -179,5 +185,27 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 	case <-wait:
 	}
 
-	return ctx.Err()
+	errsLock.Lock()
+	defer errsLock.Unlock()
+
+	if err := ctx.Done(); err != nil {
+		errs.PushBack(err)
+	}
+
+	if errs.Len() > 0 {
+		var buffer bytes.Buffer
+		buffer.WriteString("[")
+		for err := errs.Front(); err != nil; err = err.Next() {
+			if err != errs.Front() {
+				buffer.WriteString(", ")
+			}
+			buffer.WriteString("[")
+			buffer.WriteString(err.Value.(error).Error())
+			buffer.WriteString("]")
+		}
+		buffer.WriteString("]")
+		return errors.New(buffer.String())
+	}
+
+	return nil
 }
