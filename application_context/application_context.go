@@ -5,35 +5,40 @@ import (
 	"fmt"
 	"reflect"
 
-	uuid "github.com/satori/go.uuid"
 	"github.com/yarencheng/gospring/bean"
-	"github.com/yarencheng/gospring/interfaces"
 	"github.com/yarencheng/gospring/v1"
+
+	uuid "github.com/satori/go.uuid"
+	"github.com/yarencheng/gospring/interfaces"
 )
 
 type ApplicationContext struct {
-	beans       *list.List
-	beansByID   map[string]interfaces.BeanI
-	beansByUUID map[uuid.UUID]interfaces.BeanI
-}
-
-func Default() *ApplicationContext {
-	ctx := &ApplicationContext{
-		beans:       list.New(),
-		beansByID:   make(map[string]interfaces.BeanI),
-		beansByUUID: make(map[uuid.UUID]interfaces.BeanI),
-	}
-
-	return ctx
+	beans        *list.List
+	beansByID    map[string]interfaces.BeanI
+	beansByUUID  map[uuid.UUID]interfaces.BeanI
+	configParser map[reflect.Type]interfaces.ConfigParser
 }
 
 func New() *ApplicationContext {
 
 	return &ApplicationContext{
-		beans:       list.New(),
-		beansByID:   make(map[string]interfaces.BeanI),
-		beansByUUID: make(map[uuid.UUID]interfaces.BeanI),
+		beans:        list.New(),
+		beansByID:    make(map[string]interfaces.BeanI),
+		beansByUUID:  make(map[uuid.UUID]interfaces.BeanI),
+		configParser: make(map[reflect.Type]interfaces.ConfigParser),
 	}
+}
+
+func Default() *ApplicationContext {
+	ctx := New()
+
+	ctx.UseConfigParser(reflect.TypeOf(&v1.Bean{}), bean.V1BeanParser)
+	return ctx
+}
+
+func (c *ApplicationContext) UseConfigParser(configType reflect.Type, parser interfaces.ConfigParser) error {
+	c.configParser[configType] = parser
+	return nil
 }
 
 func (c *ApplicationContext) AddConfigs(configs ...interface{}) error {
@@ -46,32 +51,31 @@ func (c *ApplicationContext) AddConfigs(configs ...interface{}) error {
 }
 
 func (c *ApplicationContext) AddConfig(config interface{}) (interfaces.BeanI, error) {
-	switch config.(type) {
-	case *v1.Bean:
-		cb := config.(*v1.Bean)
+	tvpe := reflect.TypeOf(config)
 
-		bean, err := bean.NewStructBeanV1(c, cb)
-		if err != nil {
-			return nil, fmt.Errorf("Create bean failed. err: [%v]", err)
-		}
-
-		if _, exist := c.beansByID[bean.GetID()]; exist {
-			return nil, fmt.Errorf("ID [%v] allready exists", bean.GetID())
-		}
-
-		if _, exist := c.beansByUUID[bean.GetUUID()]; exist {
-			return nil, fmt.Errorf("UUID [%v] allready exists", bean.GetUUID())
-		}
-
-		c.beans.PushBack(bean)
-		c.beansByID[bean.GetID()] = bean
-		c.beansByUUID[bean.GetUUID()] = bean
-
-		return bean, nil
-
-	default:
-		return nil, fmt.Errorf("[%v] is not a valid config struct", reflect.TypeOf(config).Name())
+	parser, exist := c.configParser[tvpe]
+	if !exist {
+		return nil, fmt.Errorf("Can't find a parser for [%v]", tvpe)
 	}
+
+	bean, err := parser(c, config)
+	if err != nil {
+		return nil, fmt.Errorf("Create bean failed. err: [%v]", err)
+	}
+
+	if _, exist := c.beansByID[bean.GetID()]; exist {
+		return nil, fmt.Errorf("ID [%v] allready exists", bean.GetID())
+	}
+
+	if _, exist := c.beansByUUID[bean.GetUUID()]; exist {
+		return nil, fmt.Errorf("UUID [%v] allready exists", bean.GetUUID())
+	}
+
+	c.beans.PushBack(bean)
+	c.beansByID[bean.GetID()] = bean
+	c.beansByUUID[bean.GetUUID()] = bean
+
+	return bean, nil
 }
 
 func (c *ApplicationContext) GetByID(id string) (interface{}, error) {

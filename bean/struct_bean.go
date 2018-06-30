@@ -30,6 +30,14 @@ var defaultStruct StructBean = StructBean{
 	scope: v1.Default,
 }
 
+func V1BeanParser(ctx interfaces.ApplicationContextI, config interface{}) (interfaces.BeanI, error) {
+	c, ok := config.(*v1.Bean)
+	if !ok {
+		return nil, fmt.Errorf("[%v] can not convert to [%v]", reflect.TypeOf(config), reflect.TypeOf(&v1.Bean{}))
+	}
+	return NewStructBeanV1(ctx, c)
+}
+
 func NewStructBeanV1(ctx interfaces.ApplicationContextI, config *v1.Bean) (*StructBean, error) {
 
 	if err := checkType(config.Type); err != nil {
