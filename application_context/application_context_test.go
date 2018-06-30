@@ -18,7 +18,8 @@ func Test_New_v1Bean(t *testing.T) {
 	}
 
 	// action
-	_, err := New(config)
+	ctx := Default()
+	_, err := ctx.AddConfig(config)
 
 	// assert
 	assert.NoError(t, err)
@@ -28,23 +29,23 @@ func Test_GetByID(t *testing.T) {
 	// arrange
 
 	datas := []struct {
-		configs      []interface{}
+		config       interface{}
 		expectedType interface{}
 	}{
 		{
-			configs: []interface{}{&v1.Bean{
+			config: &v1.Bean{
 				ID:   "a_id",
 				Type: reflect.TypeOf(""),
-			}},
+			},
 			expectedType: new(string),
 		}, {
-			configs: []interface{}{&v1.Bean{
+			config: &v1.Bean{
 				ID:   "a_id",
 				Type: reflect.TypeOf(123),
-			}},
+			},
 			expectedType: new(int),
 		}, {
-			configs: []interface{}{&v1.Bean{
+			config: &v1.Bean{
 				Type: reflect.TypeOf(123),
 				Properties: []v1.Property{
 					{
@@ -55,13 +56,14 @@ func Test_GetByID(t *testing.T) {
 						},
 					},
 				},
-			}},
+			},
 			expectedType: new(bool),
 		},
 	}
 
 	for _, data := range datas {
-		ctx, err := New(data.configs...)
+		ctx := Default()
+		_, err := ctx.AddConfig(data.config)
 		require.NoError(t, err)
 
 		// action
@@ -82,17 +84,17 @@ func Test_GetByID_withProperty(t *testing.T) {
 		Value *string
 	}
 	datas := []struct {
-		configs []interface{}
-		isNil   interface{}
+		config interface{}
+		isNil  interface{}
 	}{
 		{
-			configs: []interface{}{&v1.Bean{
+			config: &v1.Bean{
 				ID:   "a_id",
 				Type: reflect.TypeOf(StructInt{}),
-			}},
+			},
 			isNil: true,
 		}, {
-			configs: []interface{}{&v1.Bean{
+			config: &v1.Bean{
 				ID:   "a_id",
 				Type: reflect.TypeOf(StructInt{}),
 				Properties: []v1.Property{
@@ -103,16 +105,16 @@ func Test_GetByID_withProperty(t *testing.T) {
 						},
 					},
 				},
-			}},
+			},
 			isNil: false,
 		}, {
-			configs: []interface{}{&v1.Bean{
+			config: &v1.Bean{
 				ID:   "a_id",
 				Type: reflect.TypeOf(StructString{}),
-			}},
+			},
 			isNil: true,
 		}, {
-			configs: []interface{}{&v1.Bean{
+			config: &v1.Bean{
 				ID:   "a_id",
 				Type: reflect.TypeOf(StructString{}),
 				Properties: []v1.Property{
@@ -123,13 +125,14 @@ func Test_GetByID_withProperty(t *testing.T) {
 						},
 					},
 				},
-			}},
+			},
 			isNil: false,
 		},
 	}
 
 	for _, data := range datas {
-		ctx, err := New(data.configs...)
+		ctx := Default()
+		_, err := ctx.AddConfig(data.config)
 		require.NoError(t, err)
 
 		// action

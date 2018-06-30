@@ -17,21 +17,32 @@ type ApplicationContext struct {
 	beansByUUID map[uuid.UUID]interfaces.BeanI
 }
 
-func New(configs ...interface{}) (*ApplicationContext, error) {
-
-	c := &ApplicationContext{
+func Default() *ApplicationContext {
+	ctx := &ApplicationContext{
 		beans:       list.New(),
 		beansByID:   make(map[string]interfaces.BeanI),
 		beansByUUID: make(map[uuid.UUID]interfaces.BeanI),
 	}
 
+	return ctx
+}
+
+func New() *ApplicationContext {
+
+	return &ApplicationContext{
+		beans:       list.New(),
+		beansByID:   make(map[string]interfaces.BeanI),
+		beansByUUID: make(map[uuid.UUID]interfaces.BeanI),
+	}
+}
+
+func (c *ApplicationContext) AddConfigs(configs ...interface{}) error {
 	for _, config := range configs {
 		if _, err := c.AddConfig(config); err != nil {
-			return nil, fmt.Errorf("Add config [%#v] failed. err: [%v]", config, err)
+			return fmt.Errorf("Add config [%#v] failed. err: [%v]", config, err)
 		}
 	}
-
-	return c, nil
+	return nil
 }
 
 func (c *ApplicationContext) AddConfig(config interface{}) (interfaces.BeanI, error) {
