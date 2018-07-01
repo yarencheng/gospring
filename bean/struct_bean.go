@@ -26,10 +26,6 @@ type StructBean struct {
 	ctx            interfaces.ApplicationContextI
 }
 
-var defaultStruct StructBean = StructBean{
-	scope: v1.Default,
-}
-
 func V1BeanParser(ctx interfaces.ApplicationContextI, config interface{}) (interfaces.BeanI, error) {
 	c, ok := config.(*v1.Bean)
 	if !ok {

@@ -20,6 +20,12 @@ type Property struct {
 	Config interface{}
 }
 
+type Channel struct {
+	ID   string
+	Type reflect.Type
+	Size int
+}
+
 func T(i interface{}) reflect.Type {
 	return reflect.TypeOf(i)
 }
