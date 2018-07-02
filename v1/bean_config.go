@@ -26,6 +26,12 @@ type Channel struct {
 	Size int
 }
 
+type Broadcast struct {
+	ID       string
+	SourceID string
+	Size     int
+}
+
 func T(i interface{}) reflect.Type {
 	return reflect.TypeOf(i)
 }
