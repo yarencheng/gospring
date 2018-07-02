@@ -32,6 +32,10 @@ type Broadcast struct {
 	Size     int
 }
 
+type Ref struct {
+	ID string
+}
+
 func T(i interface{}) reflect.Type {
 	return reflect.TypeOf(i)
 }

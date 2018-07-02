@@ -38,6 +38,10 @@ func Default() *ApplicationContext {
 
 	ctx.UseConfigParser(reflect.TypeOf(&v1.Bean{}), bean.V1BeanParser)
 	ctx.UseConfigParser(reflect.TypeOf(&v1.Channel{}), bean.V1ChannelParser)
+	ctx.UseConfigParser(reflect.TypeOf(&v1.Ref{}), bean.V1RefParser)
+	ctx.UseConfigParser(reflect.TypeOf(""), bean.V1RefParser)
+	ctx.UseConfigParser(reflect.TypeOf(&v1.Broadcast{}), bean.V1BroadcastParser)
+
 	return ctx
 }
 
