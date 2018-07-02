@@ -62,6 +62,7 @@ func (bc *Broadcaster) GetValue() (reflect.Value, error) {
 	}
 
 	inTypet := bc.in.Type().Elem()
+	fmt.Printf("aaaaaa %v\n", inTypet)
 	tvpe := reflect.ChanOf(reflect.BothDir, inTypet)
 	out := reflect.MakeChan(tvpe, bc.size)
 

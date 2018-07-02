@@ -90,3 +90,45 @@ func Test_Broadcaster_GetValue_structChannel(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, TestStruct{I: 123}, i2.Interface().(TestStruct))
 }
+
+func Test_Broadcaster_GetValue_interfaceChannel(t *testing.T) {
+	type TestStruct struct {
+		I int
+	}
+
+	// arrange: mock input source
+	sourceCh := make(chan interface{})
+	sourceBean := new(mocks.BeanMock)
+	sourceBean.On("GetValue").Return(func() reflect.Value {
+		return reflect.ValueOf(sourceCh)
+	}(), nil)
+
+	ctx := new(mocks.ApplicationContextMock)
+	ctx.On("GetBeanByID", "from_id").Return(sourceBean, true)
+
+	// arrange: create broad cast bean
+	bean, err := V1BroadcastParser(ctx, &v1.Broadcast{
+		SourceID: "from_id",
+		Size:     1,
+	})
+	require.NotNil(t, bean)
+	require.NoError(t, err)
+
+	// action: get 2 output channel
+	value1, err := bean.GetValue()
+	require.True(t, value1.IsValid())
+	require.NoError(t, err)
+	value2, err := bean.GetValue()
+	require.True(t, value2.IsValid())
+	require.NoError(t, err)
+	// action: send data to input channel
+	sourceCh <- TestStruct{I: 123}
+
+	// assert: both channel receive same data
+	i1, ok := value1.Recv()
+	assert.True(t, ok)
+	assert.Equal(t, TestStruct{I: 123}, i1.Interface().(TestStruct))
+	i2, ok := value2.Recv()
+	assert.True(t, ok)
+	assert.Equal(t, TestStruct{I: 123}, i2.Interface().(TestStruct))
+}
