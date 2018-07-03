@@ -167,8 +167,8 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 
 	for e := c.beans.Front(); e != nil; e = e.Next() {
 		v, ok := e.Value.(interfaces.BeanI)
-		if ok {
-			return fmt.Errorf("Can't convert [%v] to type interfaces.BeanI", v)
+		if !ok {
+			return fmt.Errorf("Can't convert [%v] to type interfaces.BeanI", reflect.TypeOf(e.Value))
 		}
 		go func() {
 			err := v.Stop(ctx)
