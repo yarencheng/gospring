@@ -36,6 +36,15 @@ type Ref struct {
 	ID string
 }
 
+type Value struct {
+	ID    string
+	Value interface{}
+}
+
 func T(i interface{}) reflect.Type {
 	return reflect.TypeOf(i)
+}
+
+func V(v interface{}) Value {
+	return Value{Value: v}
 }
