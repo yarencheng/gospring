@@ -74,17 +74,21 @@ func (c *ApplicationContext) AddConfig(config interface{}) (interfaces.BeanI, er
 		return nil, fmt.Errorf("Create bean failed. err: [%v]", err)
 	}
 
-	if _, exist := c.beansByID[bean.GetID()]; exist {
-		return nil, fmt.Errorf("ID [%v] allready exists", bean.GetID())
+	if bean.GetID() != "" {
+		if _, exist := c.beansByID[bean.GetID()]; exist {
+			return nil, fmt.Errorf("ID [%v] allready exists", bean.GetID())
+		} else {
+			c.beansByID[bean.GetID()] = bean
+		}
 	}
 
 	if _, exist := c.beansByUUID[bean.GetUUID()]; exist {
 		return nil, fmt.Errorf("UUID [%v] allready exists", bean.GetUUID())
+	} else {
+		c.beansByUUID[bean.GetUUID()] = bean
 	}
 
 	c.beans.PushBack(bean)
-	c.beansByID[bean.GetID()] = bean
-	c.beansByUUID[bean.GetUUID()] = bean
 
 	return bean, nil
 }
