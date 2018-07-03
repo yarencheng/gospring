@@ -338,14 +338,14 @@ func (b *StructBean) initStartFn(c *v1.Bean) error {
 
 	switch b.startFn.Type().NumIn() {
 	case 2:
-		if b.startFn.Type().In(1).AssignableTo(reflect.TypeOf((*context.Context)(nil)).Elem()) {
-			return fmt.Errorf("The 2nd argument of the start func [%v] should be a context.Context", b.startFn)
+		if !b.startFn.Type().In(1).AssignableTo(reflect.TypeOf((*context.Context)(nil)).Elem()) {
+			return fmt.Errorf("The 2nd argument of the start func [%v] should be a context.Context", b.startFn.Type())
 		}
 		fallthrough
 	case 1:
 		if b.startFn.Type().In(0).Kind() != reflect.Ptr ||
 			!b.startFn.Type().In(0).Elem().AssignableTo(c.Type) {
-			return fmt.Errorf("The 1st argument of the start func [%v] should be a context.Context", b.startFn)
+			return fmt.Errorf("The 1st argument of the start func [%v] should be a context.Context", b.startFn.Type())
 		}
 	default:
 		return fmt.Errorf("Ony 1 or 2 argument for a start function")
@@ -354,7 +354,7 @@ func (b *StructBean) initStartFn(c *v1.Bean) error {
 	switch b.startFn.Type().NumOut() {
 	case 1:
 		if b.startFn.Type().In(0).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
-			return fmt.Errorf("The 1st return value of the start func [%v] should be an error", b.startFn)
+			return fmt.Errorf("The 1st return value of the start func [%v] should be an error", b.startFn.Type())
 		}
 		fallthrough
 	case 0:
@@ -385,14 +385,14 @@ func (b *StructBean) initStopFn(c *v1.Bean) error {
 
 	switch b.stopFn.Type().NumIn() {
 	case 2:
-		if b.stopFn.Type().In(1).AssignableTo(reflect.TypeOf((*context.Context)(nil)).Elem()) {
-			return fmt.Errorf("The 2nd argument of the stop func [%v] should be a context.Context", b.stopFn)
+		if !b.stopFn.Type().In(1).AssignableTo(reflect.TypeOf((*context.Context)(nil)).Elem()) {
+			return fmt.Errorf("The 2nd argument of the stop func [%v] should be a context.Context", b.stopFn.Type())
 		}
 		fallthrough
 	case 1:
 		if b.stopFn.Type().In(0).Kind() != reflect.Ptr ||
 			!b.stopFn.Type().In(0).Elem().AssignableTo(c.Type) {
-			return fmt.Errorf("The 1st argument of the stop func [%v] should be a context.Context", b.stopFn)
+			return fmt.Errorf("The 1st argument of the stop func [%v] should be a context.Context", b.stopFn.Type())
 		}
 	default:
 		return fmt.Errorf("Ony 1 or 2 argument for a stop function")
@@ -401,7 +401,7 @@ func (b *StructBean) initStopFn(c *v1.Bean) error {
 	switch b.stopFn.Type().NumOut() {
 	case 1:
 		if b.stopFn.Type().In(0).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
-			return fmt.Errorf("The 1st return value of the stop func [%v] should be an error", b.stopFn)
+			return fmt.Errorf("The 1st return value of the stop func [%v] should be an error", b.stopFn.Type())
 		}
 		fallthrough
 	case 0:

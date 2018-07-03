@@ -168,3 +168,34 @@ func Test_GetValue_withDefaultStopFn(t *testing.T) {
 	require.True(t, ok, "%v", v.Type())
 	assert.Equal(t, expected, actual)
 }
+
+type Test_GetValue_withDefaultStopFnContext_struct struct {
+	i int
+}
+
+func (s *Test_GetValue_withDefaultStopFnContext_struct) Stop(context.Context) {
+	s.i = 123
+}
+func Test_GetValue_withDefaultStopFnContext(t *testing.T) {
+	// arrange
+	expected := &Test_GetValue_withDefaultStopFnContext_struct{i: 123}
+	config := &v1.Bean{
+		Type:  reflect.TypeOf(Test_GetValue_withDefaultStopFnContext_struct{}),
+		Scope: v1.Singleton,
+	}
+	bean, err := NewStructBeanV1(nil, config)
+	require.NoError(t, err)
+
+	// arrange
+	v, err := bean.GetValue()
+	require.NoError(t, err)
+
+	// action
+	err = bean.Stop(context.Background())
+	require.NoError(t, err)
+
+	// assert
+	actual, ok := v.Interface().(*Test_GetValue_withDefaultStopFnContext_struct)
+	require.True(t, ok, "%v", v.Type())
+	assert.Equal(t, expected, actual)
+}
