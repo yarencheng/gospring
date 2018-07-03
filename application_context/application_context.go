@@ -199,7 +199,7 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 	errsLock.Lock()
 	defer errsLock.Unlock()
 
-	if err := ctx.Done(); err != nil {
+	if err := ctx.Err(); err != nil {
 		errs.PushBack(err)
 	}
 
