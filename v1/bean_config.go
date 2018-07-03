@@ -45,6 +45,6 @@ func T(i interface{}) reflect.Type {
 	return reflect.TypeOf(i)
 }
 
-func V(v interface{}) Value {
-	return Value{Value: v}
+func V(v interface{}) *Value {
+	return &Value{Value: v}
 }
