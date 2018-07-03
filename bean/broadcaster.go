@@ -39,7 +39,7 @@ func V1BroadcastParser(ctx interfaces.ApplicationContextI, config interface{}) (
 		size:     c.Size,
 		outs:     make([]reflect.Value, 0),
 		ctx:      ctx,
-		stop:     make(chan int),
+		stop:     make(chan int, 1),
 		started:  false,
 	}
 
@@ -82,6 +82,7 @@ func (bc *Broadcaster) Stop(ctx context.Context) error {
 	bc.stop <- 1
 
 	wait := make(chan int, 1)
+
 	go func() {
 		bc.wg.Wait()
 		wait <- 1
@@ -124,10 +125,10 @@ func (bc *Broadcaster) startBroadcast() error {
 			switch chosen {
 			case 0:
 				if !ok {
-					break
+					return
 				}
 			case 1:
-				break
+				return
 			}
 
 			bc.lock.Lock()

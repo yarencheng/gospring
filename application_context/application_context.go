@@ -196,10 +196,9 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 	case <-wait:
 	}
 
-	errsLock.Lock()
-	defer errsLock.Unlock()
-
 	if err := ctx.Err(); err != nil {
+		errsLock.Lock()
+		defer errsLock.Unlock()
 		errs.PushBack(err)
 	}
 
