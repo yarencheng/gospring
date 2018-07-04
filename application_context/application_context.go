@@ -132,35 +132,6 @@ func (c *ApplicationContext) GetByUUID(id uuid.UUID) (interface{}, error) {
 	return v.Interface(), nil
 }
 
-func (c *ApplicationContext) GetBeanByID(id string) (interfaces.BeanI, bool) {
-
-	if len(id) == 0 {
-		return nil, false
-	}
-
-	bean, ok := c.beansByID[id]
-
-	if !ok {
-		return nil, false
-	}
-
-	return bean, true
-}
-
-func (c *ApplicationContext) GetBeanByUUID(id uuid.UUID) (interfaces.BeanI, bool) {
-	if id == uuid.Nil {
-		return nil, false
-	}
-
-	bean, ok := c.beansByUUID[id]
-
-	if !ok {
-		return nil, false
-	}
-
-	return bean, true
-}
-
 func (c *ApplicationContext) Stop(ctx context.Context) error {
 
 	errsLock := sync.Mutex{}

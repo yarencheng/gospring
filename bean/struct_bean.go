@@ -191,20 +191,18 @@ func (b *StructBean) createValue() (reflect.Value, error) {
 	}
 
 	for name, uuid := range b.properties {
-		pb, ok := b.ctx.GetBeanByUUID(uuid)
-		if !ok {
-			return reflect.Value{}, fmt.Errorf("Bean with UUID [%v] dose not exist", uuid)
-		}
 
 		fv := v.Elem().FieldByName(name)
 		if !fv.IsValid() {
 			return reflect.Value{}, fmt.Errorf("Field [%v] is not found", name)
 		}
 
-		pbv, err := pb.GetValue()
+		pb, err := b.ctx.GetByUUID(uuid)
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("Get value from bean [uuid=%v] failed", uuid)
 		}
+
+		pbv := reflect.ValueOf(pb)
 
 		if pbv.Type().AssignableTo(fv.Type()) {
 			fv.Set(pbv)

@@ -97,17 +97,13 @@ func (bc *Broadcaster) Stop(ctx context.Context) error {
 }
 
 func (bc *Broadcaster) initSourceChannel() error {
-	bean, ok := bc.ctx.GetBeanByID(bc.sourceID)
-	if !ok {
-		return fmt.Errorf("Can't get bean with ID [%v]", bc.sourceID)
-	}
 
-	value, err := bean.GetValue()
+	value, err := bc.ctx.GetByID(bc.sourceID)
 	if err != nil {
 		return fmt.Errorf("Can't get channel with ID [%v]", bc.sourceID)
 	}
 
-	bc.in = value
+	bc.in = reflect.ValueOf(value)
 
 	return nil
 }

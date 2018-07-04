@@ -1,7 +1,6 @@
 package bean
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,13 +13,8 @@ import (
 func Test_Broadcaster_GetValue_intChannel(t *testing.T) {
 	// arrange: mock input source
 	sourceCh := make(chan int)
-	sourceBean := new(mocks.BeanMock)
-	sourceBean.On("GetValue").Return(func() reflect.Value {
-		return reflect.ValueOf(sourceCh)
-	}(), nil)
-
 	ctx := new(mocks.ApplicationContextMock)
-	ctx.On("GetBeanByID", "from_id").Return(sourceBean, true)
+	ctx.On("GetByID", "from_id").Return(sourceCh, nil)
 
 	// arrange: create broad cast bean
 	bean, err := V1BroadcastParser(ctx, &v1.Broadcast{
@@ -56,13 +50,8 @@ func Test_Broadcaster_GetValue_structChannel(t *testing.T) {
 
 	// arrange: mock input source
 	sourceCh := make(chan TestStruct)
-	sourceBean := new(mocks.BeanMock)
-	sourceBean.On("GetValue").Return(func() reflect.Value {
-		return reflect.ValueOf(sourceCh)
-	}(), nil)
-
 	ctx := new(mocks.ApplicationContextMock)
-	ctx.On("GetBeanByID", "from_id").Return(sourceBean, true)
+	ctx.On("GetByID", "from_id").Return(sourceCh, nil)
 
 	// arrange: create broad cast bean
 	bean, err := V1BroadcastParser(ctx, &v1.Broadcast{
@@ -98,13 +87,8 @@ func Test_Broadcaster_GetValue_interfaceChannel(t *testing.T) {
 
 	// arrange: mock input source
 	sourceCh := make(chan interface{})
-	sourceBean := new(mocks.BeanMock)
-	sourceBean.On("GetValue").Return(func() reflect.Value {
-		return reflect.ValueOf(sourceCh)
-	}(), nil)
-
 	ctx := new(mocks.ApplicationContextMock)
-	ctx.On("GetBeanByID", "from_id").Return(sourceBean, true)
+	ctx.On("GetByID", "from_id").Return(sourceCh, nil)
 
 	// arrange: create broad cast bean
 	bean, err := V1BroadcastParser(ctx, &v1.Broadcast{

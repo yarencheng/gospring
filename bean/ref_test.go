@@ -2,7 +2,6 @@ package bean
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/yarencheng/gospring/v1"
@@ -32,13 +31,9 @@ func Test_Reference_GetValue(t *testing.T) {
 			Child ChildStruct
 		}
 
-		// arrange: Mock for the property bean
-		childBean := new(mocks.BeanMock)
-		childBean.On("GetValue").Return(reflect.ValueOf(expected), nil)
-
 		// arrange: mock input source
 		ctx := new(mocks.ApplicationContextMock)
-		ctx.On("GetBeanByID", "a_id").Return(childBean, true)
+		ctx.On("GetByID", "a_id").Return(expected, nil)
 
 		// arrange: create parent bean
 		bean, err := V1RefParser(ctx, config)

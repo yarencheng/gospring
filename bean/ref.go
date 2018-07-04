@@ -46,17 +46,12 @@ func (r *Reference) GetID() string {
 
 func (r *Reference) GetValue() (reflect.Value, error) {
 
-	b, ok := r.ctx.GetBeanByID(r.targetID)
-	if !ok {
-		return reflect.Value{}, fmt.Errorf("There is no bean with ID [%v]", r.targetID)
-	}
-
-	v, err := b.GetValue()
+	v, err := r.ctx.GetByID(r.targetID)
 	if err != nil {
 		return reflect.Value{}, fmt.Errorf("Get the value from the bean failed. err: [%v]", err)
 	}
 
-	return v, nil
+	return reflect.ValueOf(v), nil
 }
 
 func (r *Reference) Stop(ctx context.Context) error {
