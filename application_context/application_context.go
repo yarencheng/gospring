@@ -167,16 +167,12 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 				continue
 			}
 
-			fmt.Printf("aaaaaa %v %v\n", v.GetID(), reflect.TypeOf(v))
-
 			err := v.Stop(ctx)
 			if err != nil {
 				errsLock.Lock()
 				defer errsLock.Unlock()
 				errs.PushBack(fmt.Errorf("%v: %v", v.GetID(), err))
 			}
-
-			fmt.Printf("aaaaaa %v %v ===============\n", v.GetID(), reflect.TypeOf(v))
 		}
 	}()
 
