@@ -152,23 +152,29 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 	errs := list.New()
 
 	wg := sync.WaitGroup{}
-	wg.Add(c.beans.Len())
+	wg.Add(1)
 
-	for e := c.toBeStopBeanQueue.Front(); e != nil; e = e.Next() {
-		v, ok := e.Value.(interfaces.BeanI)
-		if !ok {
-			return fmt.Errorf("Can't convert [%v] to type interfaces.BeanI", reflect.TypeOf(e.Value))
-		}
-		go func() {
+	go func() {
+		defer wg.Done()
+		for e := c.toBeStopBeanQueue.Back(); e != nil; e = e.Prev() {
+
+			v, ok := e.Value.(interfaces.BeanI)
+			if !ok {
+				errsLock.Lock()
+				defer errsLock.Unlock()
+				err := fmt.Errorf("Can't convert [%v] to type interfaces.BeanI", reflect.TypeOf(e.Value))
+				errs.PushBack(fmt.Errorf("%v: %v", v.GetID(), err))
+				continue
+			}
+
 			err := v.Stop(ctx)
 			if err != nil {
 				errsLock.Lock()
 				defer errsLock.Unlock()
-				errs.PushBack(err)
+				errs.PushBack(fmt.Errorf("%v: %v", v.GetID(), err))
 			}
-			wg.Done()
-		}()
-	}
+		}
+	}()
 
 	wait := make(chan int)
 	go func() {
