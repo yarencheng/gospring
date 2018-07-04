@@ -79,11 +79,11 @@ func (bc *Broadcaster) GetValue() (reflect.Value, error) {
 }
 
 func (bc *Broadcaster) Stop(ctx context.Context) error {
-	bc.stop <- 1
 
 	wait := make(chan int, 1)
 
 	go func() {
+		close(bc.stop)
 		bc.wg.Wait()
 		wait <- 1
 	}()
@@ -118,6 +118,7 @@ func (bc *Broadcaster) startBroadcast() error {
 			cases[0] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: bc.in}
 			cases[1] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(bc.stop)}
 			chosen, value, ok := reflect.Select(cases)
+
 			switch chosen {
 			case 0:
 				if !ok {
@@ -128,7 +129,6 @@ func (bc *Broadcaster) startBroadcast() error {
 			}
 
 			bc.lock.Lock()
-			defer bc.lock.Unlock()
 
 			for _, out := range bc.outs {
 				if out.Len() >= bc.size {
@@ -138,6 +138,9 @@ func (bc *Broadcaster) startBroadcast() error {
 				}
 				out.Send(value)
 			}
+
+			bc.lock.Unlock()
+
 		}
 
 	}()
