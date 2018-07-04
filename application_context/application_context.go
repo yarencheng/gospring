@@ -18,19 +18,23 @@ import (
 )
 
 type ApplicationContext struct {
-	beans        *list.List
-	beansByID    map[string]interfaces.BeanI
-	beansByUUID  map[uuid.UUID]interfaces.BeanI
-	configParser map[reflect.Type]interfaces.ConfigParser
+	beans             *list.List
+	beansByID         map[string]interfaces.BeanI
+	beansByUUID       map[uuid.UUID]interfaces.BeanI
+	configParser      map[reflect.Type]interfaces.ConfigParser
+	toBeStopBeanQueue *list.List
+	toBeStopBean      map[uuid.UUID]interfaces.BeanI
 }
 
 func New() *ApplicationContext {
 
 	return &ApplicationContext{
-		beans:        list.New(),
-		beansByID:    make(map[string]interfaces.BeanI),
-		beansByUUID:  make(map[uuid.UUID]interfaces.BeanI),
-		configParser: make(map[reflect.Type]interfaces.ConfigParser),
+		beans:             list.New(),
+		beansByID:         make(map[string]interfaces.BeanI),
+		beansByUUID:       make(map[uuid.UUID]interfaces.BeanI),
+		configParser:      make(map[reflect.Type]interfaces.ConfigParser),
+		toBeStopBeanQueue: list.New(),
+		toBeStopBean:      make(map[uuid.UUID]interfaces.BeanI),
 	}
 }
 
@@ -110,6 +114,11 @@ func (c *ApplicationContext) GetByID(id string) (interface{}, error) {
 		return nil, err
 	}
 
+	if _, exist := c.toBeStopBean[bean.GetUUID()]; !exist {
+		c.toBeStopBean[bean.GetUUID()] = bean
+		c.toBeStopBeanQueue.PushBack(bean)
+	}
+
 	return v.Interface(), nil
 }
 
@@ -129,6 +138,11 @@ func (c *ApplicationContext) GetByUUID(id uuid.UUID) (interface{}, error) {
 		return nil, err
 	}
 
+	if _, exist := c.toBeStopBean[bean.GetUUID()]; !exist {
+		c.toBeStopBean[bean.GetUUID()] = bean
+		c.toBeStopBeanQueue.PushBack(bean)
+	}
+
 	return v.Interface(), nil
 }
 
@@ -140,7 +154,7 @@ func (c *ApplicationContext) Stop(ctx context.Context) error {
 	wg := sync.WaitGroup{}
 	wg.Add(c.beans.Len())
 
-	for e := c.beans.Front(); e != nil; e = e.Next() {
+	for e := c.toBeStopBeanQueue.Front(); e != nil; e = e.Next() {
 		v, ok := e.Value.(interfaces.BeanI)
 		if !ok {
 			return fmt.Errorf("Can't convert [%v] to type interfaces.BeanI", reflect.TypeOf(e.Value))
