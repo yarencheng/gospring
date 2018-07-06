@@ -1,4 +1,4 @@
-package application_context
+package applicationcontext
 
 import (
 	"reflect"
