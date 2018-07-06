@@ -3,16 +3,80 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "CSPbwbyzqA6sfORicn4HFtIhF/c=",
+			"path": "bufio",
+			"revision": ""
+		},
+		{
+			"path": "bytes",
+			"revision": ""
+		},
+		{
+			"path": "container/list",
+			"revision": ""
+		},
+		{
+			"path": "context",
+			"revision": ""
+		},
+		{
+			"path": "crypto/md5",
+			"revision": ""
+		},
+		{
+			"path": "crypto/rand",
+			"revision": ""
+		},
+		{
+			"path": "crypto/sha1",
+			"revision": ""
+		},
+		{
+			"path": "database/sql/driver",
+			"revision": ""
+		},
+		{
+			"path": "encoding/base64",
+			"revision": ""
+		},
+		{
+			"path": "encoding/binary",
+			"revision": ""
+		},
+		{
+			"path": "encoding/hex",
+			"revision": ""
+		},
+		{
+			"path": "encoding/json",
+			"revision": ""
+		},
+		{
+			"path": "errors",
+			"revision": ""
+		},
+		{
+			"path": "flag",
+			"revision": ""
+		},
+		{
+			"path": "fmt",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
 			"path": "github.com/davecgh/go-spew/spew",
-			"revision": "8991bc29aa16c548c550c7ff78260e27b9ab7c73",
-			"revisionTime": "2018-02-21T22:46:20Z"
+			"revision": "346938d642f2ec3594ed81d874461961cd0faa76",
+			"revisionTime": "2016-10-29T20:57:26Z",
+			"version": "v1",
+			"versionExact": "v1.1.0"
 		},
 		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "792786c7400a136282c1664665ae0a8db921c6c2",
-			"revisionTime": "2016-01-10T10:55:54Z"
+			"revisionTime": "2016-01-10T10:55:54Z",
+			"version": "v1",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "+nVM+CEZGAopOrYlLifgWP+X01E=",
@@ -23,58 +87,156 @@
 			"versionExact": "v1.2.0"
 		},
 		{
-			"checksumSHA1": "n+vQ7Bmp+ODWGmCp8cI5MFsaZVA=",
+			"checksumSHA1": "MRVLjdkQR4RXdrFu2hHxX5mWAmQ=",
 			"path": "github.com/stretchr/objx",
-			"revision": "a5cfa15c000af5f09784e5355969ba7eb66ef0de",
-			"revisionTime": "2018-04-26T10:50:06Z"
+			"revision": "477a77ecc69700c7cdeb1fa9e129548e1c1c393c",
+			"revisionTime": "2018-01-25T22:19:50Z",
+			"version": "v0",
+			"versionExact": "v0.1.1"
 		},
 		{
-			"checksumSHA1": "JIL0tHs3pEgHjXhtB3tJrz4C0h8=",
-			"path": "github.com/stretchr/testify",
-			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
-			"revisionTime": "2018-01-31T22:23:50Z",
-			"version": "v1",
-			"versionExact": "v1.2.1"
-		},
-		{
-			"checksumSHA1": "pbq5LYckA7/rqe03l9MtXDekmRg=",
+			"checksumSHA1": "c6pbpF7eowwO59phRTpF8cQ80Z0=",
 			"path": "github.com/stretchr/testify/assert",
-			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
-			"revisionTime": "2018-01-31T22:23:50Z",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z",
 			"version": "v1",
-			"versionExact": "v1.2.1"
+			"versionExact": "v1.2.2"
 		},
 		{
-			"checksumSHA1": "fg3TzS9/QK3wZbzei3Z6O8XPLHg=",
-			"path": "github.com/stretchr/testify/http",
-			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
-			"revisionTime": "2018-01-31T22:23:50Z",
-			"version": "v1",
-			"versionExact": "v1.2.1"
-		},
-		{
-			"checksumSHA1": "GxKV+q3Z/H3VsIiZ/dG3u88rnbc=",
+			"checksumSHA1": "WmBSFdqpdYRIkp0I408JIZ3LDMY=",
 			"path": "github.com/stretchr/testify/mock",
-			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
-			"revisionTime": "2018-01-31T22:23:50Z",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z",
 			"version": "v1",
-			"versionExact": "v1.2.1"
+			"versionExact": "v1.2.2"
 		},
 		{
-			"checksumSHA1": "rgS26tbD9zdX0xvmSH44lW3FMsA=",
+			"checksumSHA1": "wnEANt4k5X/KGwoFyfSSnpxULm4=",
 			"path": "github.com/stretchr/testify/require",
-			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
-			"revisionTime": "2018-01-31T22:23:50Z",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z",
 			"version": "v1",
-			"versionExact": "v1.2.1"
+			"versionExact": "v1.2.2"
 		},
 		{
-			"checksumSHA1": "uefllr2OtKBGo/kQSAPbW3w6p0A=",
-			"path": "github.com/stretchr/testify/suite",
-			"revision": "12b6f73e6084dad08a7c6e575284b177ecafbc71",
-			"revisionTime": "2018-01-31T22:23:50Z",
-			"version": "v1",
-			"versionExact": "v1.2.1"
+			"checksumSHA1": "dFE+xnwDhK+xDepqkc7+4yuN7WQ=",
+			"path": "github.com/yarencheng/gospring",
+			"revision": "3f8b50eafdb79692a575d71fc3e2d26bb1b67d98",
+			"revisionTime": "2018-05-26T19:57:09Z"
+		},
+		{
+			"path": "github.com/yarencheng/gospring/applicationcontext",
+			"revision": ""
+		},
+		{
+			"path": "github.com/yarencheng/gospring/bean",
+			"revision": ""
+		},
+		{
+			"path": "github.com/yarencheng/gospring/bean/value",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "k8wX1FFOVYinuFIyK/ILbxYOHuw=",
+			"path": "github.com/yarencheng/gospring/examples/example_0_quick_start",
+			"revision": "3f8b50eafdb79692a575d71fc3e2d26bb1b67d98",
+			"revisionTime": "2018-05-26T19:57:09Z"
+		},
+		{
+			"path": "github.com/yarencheng/gospring/interfaces",
+			"revision": ""
+		},
+		{
+			"path": "github.com/yarencheng/gospring/mocks",
+			"revision": ""
+		},
+		{
+			"path": "github.com/yarencheng/gospring/v1",
+			"revision": ""
+		},
+		{
+			"path": "hash",
+			"revision": ""
+		},
+		{
+			"path": "io",
+			"revision": ""
+		},
+		{
+			"path": "io/ioutil",
+			"revision": ""
+		},
+		{
+			"path": "math",
+			"revision": ""
+		},
+		{
+			"path": "net",
+			"revision": ""
+		},
+		{
+			"path": "net/http",
+			"revision": ""
+		},
+		{
+			"path": "net/http/httptest",
+			"revision": ""
+		},
+		{
+			"path": "net/url",
+			"revision": ""
+		},
+		{
+			"path": "os",
+			"revision": ""
+		},
+		{
+			"path": "reflect",
+			"revision": ""
+		},
+		{
+			"path": "regexp",
+			"revision": ""
+		},
+		{
+			"path": "runtime",
+			"revision": ""
+		},
+		{
+			"path": "sort",
+			"revision": ""
+		},
+		{
+			"path": "strconv",
+			"revision": ""
+		},
+		{
+			"path": "strings",
+			"revision": ""
+		},
+		{
+			"path": "sync",
+			"revision": ""
+		},
+		{
+			"path": "testing",
+			"revision": ""
+		},
+		{
+			"path": "time",
+			"revision": ""
+		},
+		{
+			"path": "unicode",
+			"revision": ""
+		},
+		{
+			"path": "unicode/utf8",
+			"revision": ""
+		},
+		{
+			"path": "unsafe",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/yarencheng/gospring"
