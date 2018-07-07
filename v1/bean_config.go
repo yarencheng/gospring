@@ -41,6 +41,11 @@ type Value struct {
 	Value interface{}
 }
 
+type List struct {
+	ID      string
+	Configs []interface{}
+}
+
 func T(i interface{}) reflect.Type {
 	return reflect.TypeOf(i)
 }

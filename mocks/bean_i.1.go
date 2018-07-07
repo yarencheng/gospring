@@ -8,13 +8,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type BeanI interface {
-	GetUUID() uuid.UUID
-	GetID() string
-	GetValue() (reflect.Value, error)
-	Stop(ctx context.Context) error
-}
-
 type BeanMock struct {
 	mock.Mock
 }

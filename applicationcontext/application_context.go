@@ -11,6 +11,8 @@ import (
 
 	"github.com/yarencheng/gospring/bean"
 	"github.com/yarencheng/gospring/bean/value"
+
+	listbean "github.com/yarencheng/gospring/bean/list"
 	"github.com/yarencheng/gospring/v1"
 
 	uuid "github.com/satori/go.uuid"
@@ -47,6 +49,7 @@ func Default() *ApplicationContext {
 	ctx.UseConfigParser(reflect.TypeOf(""), bean.V1RefParser)
 	ctx.UseConfigParser(reflect.TypeOf(&v1.Broadcast{}), bean.V1BroadcastParser)
 	ctx.UseConfigParser(reflect.TypeOf(&v1.Value{}), value.V1ValueParser)
+	ctx.UseConfigParser(reflect.TypeOf(&v1.List{}), listbean.V1ListParser)
 
 	return ctx
 }
