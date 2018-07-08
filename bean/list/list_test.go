@@ -1,6 +1,7 @@
 package list
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -43,6 +44,7 @@ func Test_List_GetValue(t *testing.T) {
 			ctx.On("GetByUUID", uuid).Return(test.expected, nil)
 
 			bean, err := V1ListParser(ctx, &v1.List{
+				Type: reflect.TypeOf(test.expected),
 				Configs: []interface{}{
 					nil,
 				},
@@ -53,7 +55,7 @@ func Test_List_GetValue(t *testing.T) {
 			require.NoError(t, err)
 
 			// assert
-			assert.Equal(t, []interface{}{test.expected}, v.Interface())
+			assert.Equal(t, test.expected, v.Index(0).Interface())
 		})
 	}
 }

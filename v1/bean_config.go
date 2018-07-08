@@ -44,6 +44,7 @@ type Value struct {
 type List struct {
 	ID      string
 	Configs []interface{}
+	Type    reflect.Type
 }
 
 func T(i interface{}) reflect.Type {

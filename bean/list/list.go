@@ -15,6 +15,7 @@ type List struct {
 	id      string
 	ctx     interfaces.ApplicationContextI
 	configs []uuid.UUID
+	tvpe    reflect.Type
 }
 
 func V1ListParser(ctx interfaces.ApplicationContextI, config interface{}) (interfaces.BeanI, error) {
@@ -29,6 +30,7 @@ func V1ListParser(ctx interfaces.ApplicationContextI, config interface{}) (inter
 		id:      c.ID,
 		ctx:     ctx,
 		configs: make([]uuid.UUID, len(c.Configs)),
+		tvpe:    c.Type,
 	}
 
 	for i, v := range c.Configs {
@@ -52,17 +54,17 @@ func (l *List) GetID() string {
 
 func (l *List) GetValue() (reflect.Value, error) {
 
-	v := make([]interface{}, len(l.configs))
+	v := reflect.MakeSlice(reflect.SliceOf(l.tvpe), len(l.configs), len(l.configs))
 
 	for i, uuid := range l.configs {
 		e, err := l.ctx.GetByUUID(uuid)
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("Get the value failed. err: [%v]", err)
 		}
-		v[i] = e
+		v.Index(i).Set(reflect.ValueOf(e))
 	}
 
-	return reflect.ValueOf(v), nil
+	return v, nil
 }
 
 func (l *List) Stop(ctx context.Context) error {
