@@ -243,7 +243,7 @@ func (b *StructBean) createValue() (reflect.Value, error) {
 
 		if len(err) > 0 && !err[0].IsNil() {
 			return reflect.Value{}, fmt.Errorf("StartFn [%v] returned an error. err: %v",
-				b.startFn.Type().Name(), err)
+				b.startFn.Type().Name(), err[0].Interface())
 		}
 	}
 
